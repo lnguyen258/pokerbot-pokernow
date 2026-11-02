@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "rootDir": "../src",
+    "outDir": ".build-test"
+  },
+  "files": [
+    "../src/types.d.ts",
+    "../src/ai/preflop/preflopBrain.ts",
+    "../src/table/logReader.ts",
+    "../src/table/csvLog.ts",
+    "../src/timing.ts",
+    "../src/ai/postflop/postflopBrain.ts",
+    "../src/ai/postflop/riverSolver.ts",
+    "../src/table/screenReader.ts",
+    "../src/ai/decide.ts"
+  ]
+}

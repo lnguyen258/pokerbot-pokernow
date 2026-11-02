@@ -1,0 +1,16 @@
+﻿
+> pokernow-bot@0.0.1 evolve
+> tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/evolve.js --tournaments 100000 --final 5000 --workers 24
+
+Evolution: 100000 tournaments, population 16, 520 tournaments per generation, 8 evolving bots + 0 fish per table, 24 workers.
+Payouts 1st..8th: 15 / 9 / 4 / 2 / -2 / -4 / -9 / -15. Saving to tools/sim-results/evolution.json
+gen 1: 520/100000 played (140s, 3.7/s, ~445 min left). best g4 +0.67 ± 1.10, original +0.37 | realiseOOP 0.9->0.893
+gen 2: 1040/100000 played (143s, 3.7/s, ~449 min left). best g22 +0.97 ± 1.06, original +0.09 | threeBetEquity 0.58->0.638, postflopTemperature 0.04->0.01
+gen 3: 1560/100000 played (150s, 3.6/s, ~455 min left). best g7 +0.65 ± 0.75, original +0.20 | threeBetEquity 0.58->0.674
+gen 4: 2080/100000 played (158s, 3.5/s, ~463 min left). best g7 +0.61 ± 0.70, original +0.01 | threeBetEquity 0.58->0.674
+gen 5: 2600/100000 played (160s, 3.5/s, ~469 min left). best g50 +0.89 ± 1.07, original -0.01 | openScale 1->0.965, threeBetEquity 0.58->0.67, callPenaltyOOP 0.07->0.057
+gen 6: 3120/100000 played (161s, 3.4/s, ~472 min left). best g58 +0.79 ± 1.12, original +0.24 | openScale 1->0.976, threeBetEquity 0.58->0.527, realiseOOP 0.9->0.945, postflopTemperature 0.04->0.01, isolateFish 1->0.872
+gen 7: 3640/100000 played (131s, 3.5/s, ~460 min left). best g65 +0.84 ± 1.13, original +0.31 | callPenaltyIP 0.03->0.028, realiseOOP 0.9->0.945, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+gen 8: 4160/100000 played (120s, 3.6/s, ~447 min left). best g72 +1.21 ± 1.12, original +0.07 | openScale 1->0.816, callPenaltyIP 0.03->0.028, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+gen 9: 4680/100000 played (118s, 3.7/s, ~435 min left). best g72 +1.19 ± 0.82, original +0.39 | openScale 1->0.816, callPenaltyIP 0.03->0.028, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+gen 10: 5200/100000 played (122s, 3.7/s, ~426 min left). best g92 +1.29 ± 1.11, original +0.23 | openScale 1->0.816, threeBetEquity 0.58->0.568, callPenaltyIP 0.03->0.027, callPenaltyOOP 0.07->0.099, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, isolateFish 1->1.049, exploitCutoff 0.35->0.182

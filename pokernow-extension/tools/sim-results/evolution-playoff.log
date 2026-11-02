@@ -1,0 +1,22 @@
+﻿
+> pokernow-bot@0.0.1 evolve
+> tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/evolve.js --resume --workers 24
+
+Evolution: 5000 tournaments, population 16, 520 tournaments per generation, 8 evolving bots + 0 fish per table, 24 workers. Resuming at generation 11 (5200 played).
+Payouts 1st..8th: 15 / 9 / 4 / 2 / -2 / -4 / -9 / -15. Saving to tools/sim-results/evolution.json
+
+Playoff: g92, g83, g85, g72, g22, g50, g65, original, 5000 tournaments, all at every table.
+
+  bot          points/tournament   changes vs original
+  g83          +0.50 ± 0.25         openScale 1->0.631, threeBetEquity 0.58->0.531, callPenaltyIP 0.03->0.022, callPenaltyOOP 0.07->0.096, realiseOOP 0.9->0.893, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+  g72          +0.37 ± 0.25         openScale 1->0.816, callPenaltyIP 0.03->0.028, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+  g85          +0.35 ± 0.24         openScale 1->0.816, threeBetEquity 0.58->0.568, callPenaltyIP 0.03->0.028, callPenaltyOOP 0.07->0.099, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+  g92          +0.09 ± 0.25         openScale 1->0.816, threeBetEquity 0.58->0.568, callPenaltyIP 0.03->0.027, callPenaltyOOP 0.07->0.099, realiseOOP 0.9->0.913, postflopTemperature 0.04->0.057, isolateFish 1->1.049, exploitCutoff 0.35->0.182
+  g65          -0.17 ± 0.25         callPenaltyIP 0.03->0.028, realiseOOP 0.9->0.945, postflopTemperature 0.04->0.057, exploitCutoff 0.35->0.182
+  g22          -0.24 ± 0.25         threeBetEquity 0.58->0.638, postflopTemperature 0.04->0.01
+  original     -0.25 ± 0.25         (original)
+  g50          -0.66 ± 0.26         openScale 1->0.965, threeBetEquity 0.58->0.67, callPenaltyOOP 0.07->0.057
+
+Winner: g83, +0.75 ± 0.38 pts/tournament vs original -> BETTER than the original (clear)
+Settings: {"openScale":0.631,"threeBetEquity":0.531,"callPenaltyIP":0.022,"callPenaltyOOP":0.096,"realiseOOP":0.893,"postflopTemperature":0.057,"postflopSims":1000,"riverSolver":1,"riverIterations":300,"isolateFish":1,"exploitCutoff":0.182}
+Saved to tools/sim-results/evolution.json

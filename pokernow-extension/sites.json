@@ -1,0 +1,13 @@
+{
+    "_help": [
+        "Websites the bot runs on. Add your own site, then run: npm run build",
+        "Use Chrome match patterns: https://my-poker.example.com/*  (or http://localhost/* for any local port).",
+        "Entries containing YOUR-SITE are placeholders and are skipped at build time.",
+        "One-off without editing this file: npm run build -- --env site=https://my-poker.example.com"
+    ],
+    "sites": [
+        "https://www.pokernow.club/*",
+        "https://www.pokernow.com/*",
+        "https://YOUR-SITE.example.com/*"
+    ]
+}

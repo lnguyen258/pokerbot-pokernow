@@ -1,0 +1,42 @@
+﻿
+> pokernow-bot@0.0.1 evolve
+> tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/evolve.js --mode shark --tournaments 10000 --final 5000 --workers 24
+
+Evolution: 10000 tournaments, population 16, 520 tournaments per generation, 5 evolving bots + 3 sharks per table, 24 workers.
+Payouts 1st..8th: 15 / 9 / 4 / 2 / -2 / -4 / -9 / -15. Saving to tools/sim-results/evolution-shark.json
+gen 1: 520/10000 played (81s, 6.4/s, ~25 min left). best g13 +1.49 ± 1.34, original +0.87 | openScale 0.631->0.6
+gen 2: 1040/10000 played (87s, 6.2/s, ~24 min left). best g1 +0.77 ± 1.07, original +0.60 | openScale 0.631->0.6, realiseOOP 0.893->0.909
+gen 3: 1560/10000 played (90s, 6.1/s, ~23 min left). best g30 +1.50 ± 1.37, original +0.47 | openScale 0.631->0.6, realiseOOP 0.893->0.909, bigBetRange 1->0.954
+gen 4: 2080/10000 played (93s, 5.9/s, ~22 min left). best g30 +1.43 ± 1.04, original +0.16 | openScale 0.631->0.6, realiseOOP 0.893->0.909, bigBetRange 1->0.954
+gen 5: 2600/10000 played (96s, 5.8/s, ~21 min left). best g48 +1.04 ± 1.30, original -0.04 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.097, realiseOOP 0.893->0.879, postflopTemperature 0.057->0.058
+gen 6: 3120/10000 played (100s, 5.7/s, ~20 min left). best g51 +1.36 ± 1.00, original -0.18 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.107, bigBetRange 1->0.954
+gen 7: 3640/10000 played (105s, 5.6/s, ~19 min left). best g51 +0.81 ± 0.90, original -0.20 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.107, bigBetRange 1->0.954
+gen 8: 4160/10000 played (100s, 5.5/s, ~18 min left). best g51 +1.05 ± 0.85, original -0.12 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.107, bigBetRange 1->0.954
+gen 9: 4680/10000 played (100s, 5.5/s, ~16 min left). best g86 +1.87 ± 1.38, original -0.22 | openScale 0.631->0.617, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03, bigBetRange 1->0.954
+gen 10: 5200/10000 played (103s, 5.4/s, ~15 min left). best g92 +1.67 ± 1.40, original -0.59 | openScale 0.631->0.617, threeBetEquity 0.531->0.528, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03
+gen 11: 5720/10000 played (99s, 5.4/s, ~13 min left). best g92 +1.14 ± 1.04, original -0.38 | openScale 0.631->0.617, threeBetEquity 0.531->0.528, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03
+gen 12: 6240/10000 played (102s, 5.4/s, ~12 min left). best g113 +1.80 ± 1.34, original -0.23 | openScale 0.631->0.632, threeBetEquity 0.531->0.528, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03
+gen 13: 6760/10000 played (105s, 5.4/s, ~10 min left). best g116 +1.20 ± 1.44, original -0.07 | openScale 0.631->0.632, threeBetEquity 0.531->0.523, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03
+gen 14: 7280/10000 played (100s, 5.3/s, ~8 min left). best g128 +1.20 ± 1.36, original +0.04 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.827, exploitCutoff 0.182->0.185, bigBetRange 1->0.964
+gen 15: 7800/10000 played (102s, 5.3/s, ~7 min left). best g137 +1.10 ± 1.36, original +0.00 | openScale 0.631->0.632, threeBetEquity 0.531->0.511, callPenaltyOOP 0.096->0.107, realiseOOP 0.893->0.888, isolateFish 1->1.03
+gen 16: 8320/10000 played (92s, 5.4/s, ~5 min left). best g134 +0.92 ± 1.07, original -0.04 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.827, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.185, bigBetRange 1->0.964
+gen 17: 8840/10000 played (95s, 5.4/s, ~4 min left). best g159 +0.98 ± 1.29, original -0.18 | openScale 0.631->0.6, threeBetEquity 0.531->0.525, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.827, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.185, bigBetRange 1->0.964
+gen 18: 9360/10000 played (101s, 5.3/s, ~2 min left). best g162 +0.95 ± 1.29, original -0.20 | openScale 0.631->0.6, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.86, postflopTemperature 0.057->0.059, exploitCutoff 0.182->0.185, bigBetRange 1->0.954
+gen 19: 9880/10000 played (99s, 5.3/s, ~0 min left). best g177 +0.92 ± 1.40, original -0.46 | openScale 0.631->0.6, threeBetEquity 0.531->0.525, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.827, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.191, bigBetRange 1->0.948
+gen 20: 10000/10000 played (25s, 5.3/s, ~0 min left). best g186 +2.78 ± 2.71, original -0.39 | openScale 0.631->0.6, threeBetEquity 0.531->0.525, callPenaltyOOP 0.096->0.112, realiseOOP 0.893->0.827, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.191, bigBetRange 1->0.948
+
+Playoff: g186, g167, g181, g86, original, 5000 tournaments, all at every table.
+
+  bot          points/tournament   changes vs original
+  g181         +0.22 ± 0.25         openScale 0.631->0.6, callPenaltyIP 0.022->0.023, callPenaltyOOP 0.096->0.116, realiseOOP 0.893->0.865, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.243, bigBetRange 1->0.954
+  g167         +0.13 ± 0.25         openScale 0.631->0.632, threeBetEquity 0.531->0.511, callPenaltyOOP 0.096->0.107, realiseOOP 0.893->0.853, isolateFish 1->0.768, bigBetRange 1->0.884
+  g186         +0.08 ± 0.25         openScale 0.631->0.6, threeBetEquity 0.531->0.525, callPenaltyOOP 0.096->0.112, realiseOOP 0.893->0.827, postflopTemperature 0.057->0.048, isolateFish 1->1.002, exploitCutoff 0.182->0.191, bigBetRange 1->0.948
+  shark1       +0.06 ± 0.25         (field)
+  g86          -0.00 ± 0.25         openScale 0.631->0.617, callPenaltyOOP 0.096->0.107, isolateFish 1->1.03, bigBetRange 1->0.954
+  shark2       -0.13 ± 0.25         (field)
+  shark3       -0.16 ± 0.25         (field)
+  original     -0.19 ± 0.25         (original)
+
+Winner: g181, +0.40 ± 0.38 pts/tournament vs original -> BETTER than the original (clear)
+Settings: {"tuning":{"openScale":0.6,"threeBetEquity":0.531,"callPenaltyIP":0.023,"callPenaltyOOP":0.116,"realiseOOP":0.865,"postflopTemperature":0.048,"postflopSims":1000,"riverSolver":1,"riverIterations":300,"isolateFish":1.002,"exploitCutoff":0.243},"population":{"bigBetRange":0.954,"bluffBelief":1}}
+Saved to tools/sim-results/evolution-shark.json

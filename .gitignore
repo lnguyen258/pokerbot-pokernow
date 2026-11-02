@@ -1,0 +1,16 @@
+# Dependencies and build output
+node_modules/
+pokernow-extension/dist/
+pokernow-extension/tools/.build/
+pokernow-extension/tools/.build-test/
+pokernow-extension/tools/.build-sim/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Real game logs (other players' names) stay private
+poker_now_log_*.csv
+
+# Helper extension: kept local
+autoplay-helper/
+autoplay-helper-*.zip

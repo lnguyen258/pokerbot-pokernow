@@ -1,0 +1,6 @@
+dist/
+node_modules/
+.DS_Store
+tools/.build/
+tools/.build-test/
+tools/.build-sim/

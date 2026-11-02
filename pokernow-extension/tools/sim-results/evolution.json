@@ -1,0 +1,1654 @@
+{
+ "settings": {
+  "tournaments": 5000,
+  "population": 16,
+  "perGeneration": 520,
+  "elites": 6,
+  "fish": 0,
+  "final": 5000,
+  "postflopSims": 400
+ },
+ "generation": 10,
+ "played": 5200,
+ "nextId": 106,
+ "population": [
+  {
+   "id": "original",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "born": 0,
+   "parents": [],
+   "pts": 193.30985397899997,
+   "sq": 71379.70176330899,
+   "n": 842.1854784199999,
+   "lifetimePts": 510,
+   "lifetimeN": 2600
+  },
+  {
+   "id": "g92",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.027,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1.049,
+    "exploitCutoff": 0.182
+   },
+   "born": 9,
+   "parents": [
+    "g85",
+    "g72"
+   ],
+   "pts": 336,
+   "sq": 22194,
+   "n": 260,
+   "lifetimePts": 336,
+   "lifetimeN": 260
+  },
+  {
+   "id": "g83",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 8,
+   "parents": [
+    "g74",
+    "g72"
+   ],
+   "pts": 294.1,
+   "sq": 34342.5,
+   "n": 442,
+   "lifetimePts": 304,
+   "lifetimeN": 520
+  },
+  {
+   "id": "g85",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 8,
+   "parents": [
+    "g72"
+   ],
+   "pts": 249.5,
+   "sq": 33618.3,
+   "n": 442,
+   "lifetimePts": 296,
+   "lifetimeN": 520
+  },
+  {
+   "id": "g95",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.929,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 9,
+   "parents": [
+    "g65",
+    "g85"
+   ],
+   "pts": 131,
+   "sq": 24381,
+   "n": 260,
+   "lifetimePts": 131,
+   "lifetimeN": 260
+  },
+  {
+   "id": "g65",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.945,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 6,
+   "parents": [
+    "g47"
+   ],
+   "pts": 302.024,
+   "sq": 54145.062000000005,
+   "n": 658.5799999999999,
+   "lifetimePts": 452,
+   "lifetimeN": 1040
+  },
+  {
+   "id": "g91",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.011,
+    "callPenaltyOOP": 0.068,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.01,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.183
+   },
+   "born": 9,
+   "parents": [
+    "g74"
+   ],
+   "pts": 78,
+   "sq": 22258,
+   "n": 260,
+   "lifetimePts": 78,
+   "lifetimeN": 260
+  },
+  {
+   "id": "g97",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.013,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.929,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 0.743,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g95",
+    "g83"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g98",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.027,
+    "callPenaltyOOP": 0.078,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.068,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1.049,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g92",
+    "g85"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g99",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.788,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g83",
+    "g85"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g100",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.573,
+    "callPenaltyIP": 0.027,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.222
+   },
+   "born": 10,
+   "parents": [
+    "g83",
+    "g92"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g101",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.521,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g85"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g102",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.907,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g85",
+    "g92"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g103",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.042,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.183
+   },
+   "born": 10,
+   "parents": [
+    "g83",
+    "g91"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g104",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.929,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.401
+   },
+   "born": 10,
+   "parents": [
+    "g95"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  },
+  {
+   "id": "g105",
+   "tuning": {
+    "openScale": 0.65,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.121,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "born": 10,
+   "parents": [
+    "g83"
+   ],
+   "pts": 0,
+   "sq": 0,
+   "n": 0,
+   "lifetimePts": 0,
+   "lifetimeN": 0
+  }
+ ],
+ "hall": [
+  {
+   "id": "g4",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "generation": 1,
+   "fitness": 0.6692307692307692,
+   "se": 0.5613481480207265,
+   "n": 260
+  },
+  {
+   "id": "g22",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.638,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.01,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "generation": 2,
+   "fitness": 0.9653846153846154,
+   "se": 0.5397606370318518,
+   "n": 260
+  },
+  {
+   "id": "g7",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.674,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "generation": 3,
+   "fitness": 0.6545135230066738,
+   "se": 0.385199614259227,
+   "n": 569.4
+  },
+  {
+   "id": "g7",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.674,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "generation": 4,
+   "fitness": 0.613252755929424,
+   "se": 0.35766035523671635,
+   "n": 658.5799999999999
+  },
+  {
+   "id": "g50",
+   "tuning": {
+    "openScale": 0.965,
+    "threeBetEquity": 0.67,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.057,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "generation": 5,
+   "fitness": 0.8884615384615384,
+   "se": 0.5465297377181655,
+   "n": 260
+  },
+  {
+   "id": "g58",
+   "tuning": {
+    "openScale": 0.976,
+    "threeBetEquity": 0.527,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.945,
+    "postflopTemperature": 0.01,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 0.872,
+    "exploitCutoff": 0.35
+   },
+   "generation": 6,
+   "fitness": 0.7923076923076923,
+   "se": 0.5698383531742077,
+   "n": 260
+  },
+  {
+   "id": "g65",
+   "tuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.945,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "generation": 7,
+   "fitness": 0.8384615384615385,
+   "se": 0.5769386585667043,
+   "n": 260
+  },
+  {
+   "id": "g72",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "generation": 8,
+   "fitness": 1.2076923076923076,
+   "se": 0.5689030321512591,
+   "n": 260
+  },
+  {
+   "id": "g72",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "generation": 9,
+   "fitness": 1.1850678733031672,
+   "se": 0.41908283236649974,
+   "n": 442
+  },
+  {
+   "id": "g92",
+   "tuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.027,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1.049,
+    "exploitCutoff": 0.182
+   },
+   "generation": 10,
+   "fitness": 1.2923076923076924,
+   "se": 0.5673537740786703,
+   "n": 260
+  }
+ ],
+ "history": [
+  {
+   "generation": 1,
+   "played": 520,
+   "best": "g4",
+   "bestFitness": 0.669,
+   "originalFitness": 0.373,
+   "bestTuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g4",
+     0.669
+    ],
+    [
+     "g13",
+     0.662
+    ],
+    [
+     "g2",
+     0.646
+    ],
+    [
+     "g11",
+     0.55
+    ],
+    [
+     "original",
+     0.373
+    ],
+    [
+     "g6",
+     0.262
+    ],
+    [
+     "g7",
+     0.162
+    ],
+    [
+     "g5",
+     -0.1
+    ],
+    [
+     "g14",
+     -0.104
+    ],
+    [
+     "g1",
+     -0.273
+    ],
+    [
+     "g8",
+     -0.331
+    ],
+    [
+     "g10",
+     -0.346
+    ],
+    [
+     "g12",
+     -0.373
+    ],
+    [
+     "g15",
+     -0.373
+    ],
+    [
+     "g9",
+     -0.562
+    ],
+    [
+     "g3",
+     -0.862
+    ]
+   ]
+  },
+  {
+   "generation": 2,
+   "played": 1040,
+   "best": "g22",
+   "bestFitness": 0.965,
+   "originalFitness": 0.086,
+   "bestTuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.638,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.01,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g22",
+     0.965
+    ],
+    [
+     "g7",
+     0.458
+    ],
+    [
+     "g23",
+     0.408
+    ],
+    [
+     "g19",
+     0.404
+    ],
+    [
+     "g2",
+     0.384
+    ],
+    [
+     "g24",
+     0.327
+    ],
+    [
+     "g21",
+     0.096
+    ],
+    [
+     "original",
+     0.086
+    ],
+    [
+     "g13",
+     -0.031
+    ],
+    [
+     "g16",
+     -0.046
+    ],
+    [
+     "g11",
+     -0.095
+    ],
+    [
+     "g4",
+     -0.098
+    ],
+    [
+     "g17",
+     -0.104
+    ],
+    [
+     "g20",
+     -0.104
+    ],
+    [
+     "g6",
+     -0.254
+    ],
+    [
+     "g18",
+     -0.385
+    ]
+   ]
+  },
+  {
+   "generation": 3,
+   "played": 1560,
+   "best": "g7",
+   "bestFitness": 0.655,
+   "originalFitness": 0.201,
+   "bestTuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.674,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g7",
+     0.655
+    ],
+    [
+     "g23",
+     0.582
+    ],
+    [
+     "g32",
+     0.538
+    ],
+    [
+     "g25",
+     0.362
+    ],
+    [
+     "g28",
+     0.354
+    ],
+    [
+     "g27",
+     0.323
+    ],
+    [
+     "g24",
+     0.311
+    ],
+    [
+     "original",
+     0.201
+    ],
+    [
+     "g26",
+     0.004
+    ],
+    [
+     "g22",
+     -0.035
+    ],
+    [
+     "g2",
+     -0.083
+    ],
+    [
+     "g30",
+     -0.265
+    ],
+    [
+     "g19",
+     -0.302
+    ],
+    [
+     "g29",
+     -0.35
+    ],
+    [
+     "g33",
+     -0.358
+    ],
+    [
+     "g31",
+     -0.669
+    ]
+   ]
+  },
+  {
+   "generation": 4,
+   "played": 2080,
+   "best": "g7",
+   "bestFitness": 0.613,
+   "originalFitness": 0.006,
+   "bestTuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.674,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g7",
+     0.613
+    ],
+    [
+     "g41",
+     0.5
+    ],
+    [
+     "g42",
+     0.458
+    ],
+    [
+     "g23",
+     0.432
+    ],
+    [
+     "g40",
+     0.308
+    ],
+    [
+     "g25",
+     0.264
+    ],
+    [
+     "g27",
+     0.194
+    ],
+    [
+     "g32",
+     0.129
+    ],
+    [
+     "g38",
+     0.054
+    ],
+    [
+     "g35",
+     0.046
+    ],
+    [
+     "g36",
+     0.038
+    ],
+    [
+     "original",
+     0.006
+    ],
+    [
+     "g28",
+     -0.092
+    ],
+    [
+     "g39",
+     -0.312
+    ],
+    [
+     "g37",
+     -0.631
+    ],
+    [
+     "g34",
+     -0.712
+    ]
+   ]
+  },
+  {
+   "generation": 5,
+   "played": 2600,
+   "best": "g50",
+   "bestFitness": 0.888,
+   "originalFitness": -0.007,
+   "bestTuning": {
+    "openScale": 0.965,
+    "threeBetEquity": 0.67,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.057,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g50",
+     0.888
+    ],
+    [
+     "g42",
+     0.72
+    ],
+    [
+     "g23",
+     0.665
+    ],
+    [
+     "g45",
+     0.527
+    ],
+    [
+     "g47",
+     0.508
+    ],
+    [
+     "g7",
+     0.256
+    ],
+    [
+     "g41",
+     0.208
+    ],
+    [
+     "g40",
+     0.165
+    ],
+    [
+     "g48",
+     0.127
+    ],
+    [
+     "original",
+     -0.007
+    ],
+    [
+     "g49",
+     -0.285
+    ],
+    [
+     "g25",
+     -0.322
+    ],
+    [
+     "g43",
+     -0.415
+    ],
+    [
+     "g44",
+     -0.423
+    ],
+    [
+     "g46",
+     -0.608
+    ],
+    [
+     "g51",
+     -0.888
+    ]
+   ]
+  },
+  {
+   "generation": 6,
+   "played": 3120,
+   "best": "g58",
+   "bestFitness": 0.792,
+   "originalFitness": 0.24,
+   "bestTuning": {
+    "openScale": 0.976,
+    "threeBetEquity": 0.527,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.945,
+    "postflopTemperature": 0.01,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 0.872,
+    "exploitCutoff": 0.35
+   },
+   "ranking": [
+    [
+     "g58",
+     0.792
+    ],
+    [
+     "g47",
+     0.392
+    ],
+    [
+     "g53",
+     0.346
+    ],
+    [
+     "g59",
+     0.281
+    ],
+    [
+     "g45",
+     0.262
+    ],
+    [
+     "g23",
+     0.255
+    ],
+    [
+     "original",
+     0.24
+    ],
+    [
+     "g60",
+     0.173
+    ],
+    [
+     "g50",
+     0.115
+    ],
+    [
+     "g42",
+     0.093
+    ],
+    [
+     "g7",
+     0.071
+    ],
+    [
+     "g55",
+     0.031
+    ],
+    [
+     "g52",
+     -0.104
+    ],
+    [
+     "g54",
+     -0.119
+    ],
+    [
+     "g57",
+     -0.231
+    ],
+    [
+     "g56",
+     -0.435
+    ]
+   ]
+  },
+  {
+   "generation": 7,
+   "played": 3640,
+   "best": "g65",
+   "bestFitness": 0.838,
+   "originalFitness": 0.306,
+   "bestTuning": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.945,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "ranking": [
+    [
+     "g65",
+     0.838
+    ],
+    [
+     "g58",
+     0.695
+    ],
+    [
+     "g67",
+     0.581
+    ],
+    [
+     "g66",
+     0.527
+    ],
+    [
+     "g64",
+     0.427
+    ],
+    [
+     "g53",
+     0.412
+    ],
+    [
+     "g63",
+     0.412
+    ],
+    [
+     "original",
+     0.306
+    ],
+    [
+     "g59",
+     0.215
+    ],
+    [
+     "g69",
+     0.192
+    ],
+    [
+     "g62",
+     -0.046
+    ],
+    [
+     "g47",
+     -0.121
+    ],
+    [
+     "g23",
+     -0.303
+    ],
+    [
+     "g45",
+     -0.372
+    ],
+    [
+     "g61",
+     -0.581
+    ],
+    [
+     "g68",
+     -0.804
+    ]
+   ]
+  },
+  {
+   "generation": 8,
+   "played": 4160,
+   "best": "g72",
+   "bestFitness": 1.208,
+   "originalFitness": 0.071,
+   "bestTuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "ranking": [
+    [
+     "g72",
+     1.208
+    ],
+    [
+     "g75",
+     0.923
+    ],
+    [
+     "g67",
+     0.517
+    ],
+    [
+     "g74",
+     0.465
+    ],
+    [
+     "g58",
+     0.358
+    ],
+    [
+     "g65",
+     0.357
+    ],
+    [
+     "g53",
+     0.305
+    ],
+    [
+     "g71",
+     0.162
+    ],
+    [
+     "g76",
+     0.123
+    ],
+    [
+     "g78",
+     0.073
+    ],
+    [
+     "original",
+     0.071
+    ],
+    [
+     "g73",
+     0.065
+    ],
+    [
+     "g66",
+     -0.145
+    ],
+    [
+     "g64",
+     -0.507
+    ],
+    [
+     "g77",
+     -0.685
+    ],
+    [
+     "g70",
+     -0.754
+    ]
+   ]
+  },
+  {
+   "generation": 9,
+   "played": 4680,
+   "best": "g72",
+   "bestFitness": 1.185,
+   "originalFitness": 0.387,
+   "bestTuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.028,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182
+   },
+   "ranking": [
+    [
+     "g72",
+     1.185
+    ],
+    [
+     "g85",
+     0.596
+    ],
+    [
+     "g74",
+     0.54
+    ],
+    [
+     "g67",
+     0.432
+    ],
+    [
+     "original",
+     0.387
+    ],
+    [
+     "g65",
+     0.218
+    ],
+    [
+     "g83",
+     0.127
+    ],
+    [
+     "g82",
+     0.085
+    ],
+    [
+     "g86",
+     0.069
+    ],
+    [
+     "g79",
+     0.031
+    ],
+    [
+     "g58",
+     -0.023
+    ],
+    [
+     "g75",
+     -0.256
+    ],
+    [
+     "g81",
+     -0.315
+    ],
+    [
+     "g80",
+     -0.469
+    ],
+    [
+     "g87",
+     -0.573
+    ],
+    [
+     "g84",
+     -1.088
+    ]
+   ]
+  },
+  {
+   "generation": 10,
+   "played": 5200,
+   "best": "g92",
+   "bestFitness": 1.292,
+   "originalFitness": 0.23,
+   "bestTuning": {
+    "openScale": 0.816,
+    "threeBetEquity": 0.568,
+    "callPenaltyIP": 0.027,
+    "callPenaltyOOP": 0.099,
+    "realiseOOP": 0.913,
+    "postflopTemperature": 0.057,
+    "postflopSims": 400,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1.049,
+    "exploitCutoff": 0.182
+   },
+   "ranking": [
+    [
+     "g92",
+     1.292
+    ],
+    [
+     "g83",
+     0.665
+    ],
+    [
+     "g85",
+     0.564
+    ],
+    [
+     "g95",
+     0.504
+    ],
+    [
+     "g65",
+     0.459
+    ],
+    [
+     "g91",
+     0.3
+    ],
+    [
+     "g67",
+     0.231
+    ],
+    [
+     "original",
+     0.23
+    ],
+    [
+     "g74",
+     0.16
+    ],
+    [
+     "g72",
+     0.096
+    ],
+    [
+     "g94",
+     -0.008
+    ],
+    [
+     "g88",
+     -0.327
+    ],
+    [
+     "g96",
+     -0.438
+    ],
+    [
+     "g90",
+     -0.473
+    ],
+    [
+     "g93",
+     -0.727
+    ],
+    [
+     "g89",
+     -0.842
+    ]
+   ]
+  }
+ ],
+ "playoff": {
+  "date": "2026-11-02T06:38:07.070Z",
+  "tournaments": 5000,
+  "verdict": "BETTER than the original (clear)",
+  "winner": "g83",
+  "winnerTuning": {
+   "openScale": 0.631,
+   "threeBetEquity": 0.531,
+   "callPenaltyIP": 0.022,
+   "callPenaltyOOP": 0.096,
+   "realiseOOP": 0.893,
+   "postflopTemperature": 0.057,
+   "postflopSims": 1000,
+   "riverSolver": 1,
+   "riverIterations": 300,
+   "isolateFish": 1,
+   "exploitCutoff": 0.182
+  },
+  "edgeVsOriginal": 0.752,
+  "edgeCI": 0.378,
+  "table": [
+   {
+    "id": "g83",
+    "mean": 0.502,
+    "ci": 0.246,
+    "tuning": {
+     "openScale": 0.631,
+     "threeBetEquity": 0.531,
+     "callPenaltyIP": 0.022,
+     "callPenaltyOOP": 0.096,
+     "realiseOOP": 0.893,
+     "postflopTemperature": 0.057,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.182
+    }
+   },
+   {
+    "id": "g72",
+    "mean": 0.372,
+    "ci": 0.25,
+    "tuning": {
+     "openScale": 0.816,
+     "threeBetEquity": 0.58,
+     "callPenaltyIP": 0.028,
+     "callPenaltyOOP": 0.07,
+     "realiseOOP": 0.913,
+     "postflopTemperature": 0.057,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.182
+    }
+   },
+   {
+    "id": "g85",
+    "mean": 0.35,
+    "ci": 0.245,
+    "tuning": {
+     "openScale": 0.816,
+     "threeBetEquity": 0.568,
+     "callPenaltyIP": 0.028,
+     "callPenaltyOOP": 0.099,
+     "realiseOOP": 0.913,
+     "postflopTemperature": 0.057,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.182
+    }
+   },
+   {
+    "id": "g92",
+    "mean": 0.091,
+    "ci": 0.245,
+    "tuning": {
+     "openScale": 0.816,
+     "threeBetEquity": 0.568,
+     "callPenaltyIP": 0.027,
+     "callPenaltyOOP": 0.099,
+     "realiseOOP": 0.913,
+     "postflopTemperature": 0.057,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1.049,
+     "exploitCutoff": 0.182
+    }
+   },
+   {
+    "id": "g65",
+    "mean": -0.165,
+    "ci": 0.254,
+    "tuning": {
+     "openScale": 1,
+     "threeBetEquity": 0.58,
+     "callPenaltyIP": 0.028,
+     "callPenaltyOOP": 0.07,
+     "realiseOOP": 0.945,
+     "postflopTemperature": 0.057,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.182
+    }
+   },
+   {
+    "id": "g22",
+    "mean": -0.242,
+    "ci": 0.254,
+    "tuning": {
+     "openScale": 1,
+     "threeBetEquity": 0.638,
+     "callPenaltyIP": 0.03,
+     "callPenaltyOOP": 0.07,
+     "realiseOOP": 0.9,
+     "postflopTemperature": 0.01,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.35
+    }
+   },
+   {
+    "id": "original",
+    "mean": -0.25,
+    "ci": 0.25,
+    "tuning": {
+     "openScale": 1,
+     "threeBetEquity": 0.58,
+     "callPenaltyIP": 0.03,
+     "callPenaltyOOP": 0.07,
+     "realiseOOP": 0.9,
+     "postflopTemperature": 0.04,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.35
+    }
+   },
+   {
+    "id": "g50",
+    "mean": -0.658,
+    "ci": 0.255,
+    "tuning": {
+     "openScale": 0.965,
+     "threeBetEquity": 0.67,
+     "callPenaltyIP": 0.03,
+     "callPenaltyOOP": 0.057,
+     "realiseOOP": 0.9,
+     "postflopTemperature": 0.04,
+     "postflopSims": 400,
+     "riverSolver": 1,
+     "riverIterations": 300,
+     "isolateFish": 1,
+     "exploitCutoff": 0.35
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,138 @@
+{
+  "date": "2026-11-02T04:31:01.712Z",
+  "original": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.9,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400
+  },
+  "champion": {
+    "openScale": 1,
+    "threeBetEquity": 0.58,
+    "callPenaltyIP": 0.03,
+    "callPenaltyOOP": 0.07,
+    "realiseOOP": 0.865,
+    "postflopTemperature": 0.04,
+    "postflopSims": 400
+  },
+  "verdict": "no clear difference",
+  "tunedPoints": 30.51,
+  "originalPoints": 29.2375,
+  "history": [
+    {
+      "round": 1,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 28.066666666666666,
+      "promoted": 0
+    },
+    {
+      "round": 2,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 26.15,
+      "promoted": 0
+    },
+    {
+      "round": 3,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 29.233333333333334,
+      "promoted": 0
+    },
+    {
+      "round": 4,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 25.6,
+      "promoted": 0
+    },
+    {
+      "round": 5,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 24.183333333333334,
+      "promoted": 0
+    },
+    {
+      "round": 6,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 24.216666666666665,
+      "promoted": 0
+    },
+    {
+      "round": 7,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.9,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 25.2,
+      "promoted": 0
+    },
+    {
+      "round": 8,
+      "champion": {
+        "openScale": 1,
+        "threeBetEquity": 0.58,
+        "callPenaltyIP": 0.03,
+        "callPenaltyOOP": 0.07,
+        "realiseOOP": 0.865,
+        "postflopTemperature": 0.04,
+        "postflopSims": 400
+      },
+      "championScore": 25.366666666666667,
+      "promoted": 1
+    }
+  ]
+}
