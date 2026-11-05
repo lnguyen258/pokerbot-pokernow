@@ -14,3 +14,7 @@ poker_now_log_*.csv
 # Helper extension: kept local
 autoplay-helper/
 autoplay-helper-*.zip
+pokernow-extension/tools/.build-smoke/
+
+# Exported hand records (other players' names) stay private
+data/

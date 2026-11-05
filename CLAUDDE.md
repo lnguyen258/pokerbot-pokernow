@@ -1,0 +1,3 @@
+- Analyze the game history carefully to understand how players on the website play
+- Analyze losing game to fix the bottleneck
+- Analyze winning game to continue doing what we did good, too

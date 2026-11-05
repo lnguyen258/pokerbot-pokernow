@@ -17,7 +17,7 @@ import { SimBot } from "./engine";
 import { Tuning, equityBot, maniacBot, nitBot, smartBot } from "./bots";
 import { printTable, runTournaments, summarize } from "./run";
 
-export type Knob = Exclude<keyof Tuning, "postflopSims" | "riverSolver" | "riverIterations">;
+export type Knob = Exclude<keyof Tuning, "postflopSims" | "riverSolver" | "riverIterations" | "preflopSizing" | "postflopSizing" | "phaseRules" | "postflopCareful" | "checkCallRules" | "bigBetRule" | "airRule" | "positionRules" | "shortTight" | "bluffGate" | "maniacRead" | "wideRaiseRead">;
 export const SPACE: Record<Knob, [number, number]> = {
     openScale: [0.6, 1.6],
     threeBetEquity: [0.5, 0.7],
@@ -27,6 +27,39 @@ export const SPACE: Record<Knob, [number, number]> = {
     postflopTemperature: [0.01, 0.12],
     isolateFish: [0, 2],
     exploitCutoff: [0.1, 1.01],          // 1.01 = never stop solving
+    openSizeBB: [2, 3.5],
+    openSizeCashBB: [2.2, 4],
+    threeBetSize: [2.5, 4],
+    maxOverbet: [1, 2.5],
+    sizeSpread: [0, 0.25],
+    reverseImplied: [0, 0.6],
+    openPerLimper: [0.5, 1.5],
+    openFishBonus: [0, 2],
+    openSbBonus: [0, 1],
+    threeBetOopExtra: [0, 1.5],
+    threeBetFishBonus: [0, 2],
+    fullOpen: [0.6, 1.1],
+    fullCallExtra: [0, 0.1],
+    fullRespect: [0.5, 1],
+    consOpen: [0.7, 1.1],
+    consCallExtra: [0, 0.08],
+    consRespect: [0.6, 1],
+    guardRealise: [0.6, 1],
+    shoveMaxBB: [6, 15],
+    fullMaxBet: [0.5, 1.2],
+    airMaxBet: [0.25, 1],
+    stealBonus: [0, 0.8],
+    realiseIP: [0.95, 1.15],
+    normalOpen: [0.7, 1.1],
+    normalCallExtra: [0, 0.06],
+    normalRespect: [0.6, 1],
+    creativeOpen: [0.7, 1.1],
+    creativeCallExtra: [0, 0.06],
+    creativeRespect: [0.6, 1],
+    shortShoveMaxBB: [8, 25],
+    weakMultiwayEq: [0.2, 0.5],
+    carefulCallMargin: [0.05, 0.4],
+    overcallFactor: [0, 1],
 };
 const KNOBS = Object.keys(SPACE) as Knob[];
 

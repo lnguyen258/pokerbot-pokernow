@@ -11,6 +11,12 @@
  *
  *   npm run cash -- --hands 200000
  *   npm run cash -- --hands 50000 --pool smart,shark,fish,fish,fish,fish,station,nit,maniac,equity
+ *   npm run cash -- --hands 100000 --compare old,current        # duplicate test, see below
+ *
+ * --compare a,b,...: the "smart" seat is played by each variant in turn on the SAME cards
+ * (seeded deck, seats and button), so luck mostly cancels out of the difference. Variants are
+ * names from VARIANTS or a .json file of settings (e.g. a tuner result). All-in hands are scored
+ * by expected value (the runout after the money went in is luck), see takeLuck in engine.ts.
  *
  * Bot types: smart (the extension, normal mode), shark (the extension in Shark mode: the
  * "strong player"), fish, station, maniac, nit, equity (a simple bot), random.
@@ -20,8 +26,9 @@ import { Worker, isMainThread, parentPort } from "worker_threads";
 import { CONFIG, SHARK_MODE } from "../config";
 import { parseHand } from "../table/logReader";
 import { addHand, resetStats } from "../table/stats";
-import { BOT_TYPES, smartBot } from "./bots";
-import { Seat, SimBot, playHand } from "./engine";
+import fs from "fs";
+import { BOT_TYPES, Genes, smartBot } from "./bots";
+import { Seat, SimBot, hashSeed, playHand, seededRandom, setDealRandom, setDecisionRandom, takeLuck } from "./engine";
 
 export type CashOptions = {
     sb: number,
@@ -39,10 +46,10 @@ let handId = 0;
 
 /** One session. Returns each player's chips won (after all top-ups) and hands played. */
 export function playCashSession(bots: SimBot[], opts: CashOptions = CASH_DEFAULTS,
-    onHand?: (log: string[]) => void): { won: Map<string, number>, hands: number } {
+    onHand?: (log: string[]) => void, random: () => number = Math.random): { won: Map<string, number>, hands: number } {
     const seats: Seat[] = bots.map((bot, i) => ({ seat: i + 1, name: bot.label, id: `id-${bot.label}`, bot, stack: opts.buyIn }));
     const invested = new Map(seats.map(s => [s.name, opts.buyIn]));
-    let button = Math.floor(Math.random() * seats.length);
+    let button = Math.floor(random() * seats.length);
     for (let n = 1; n <= opts.sessionHands; n++) {
         for (const s of seats) {                         // top up (or rebuy) before the hand
             if (s.stack < opts.buyIn) {
@@ -55,6 +62,58 @@ export function playCashSession(bots: SimBot[], opts: CashOptions = CASH_DEFAULT
         onHand?.(log);
     }
     return { won: new Map(seats.map(s => [s.name, s.stack - invested.get(s.name)!])), hands: opts.sessionHands };
+}
+
+/** Named settings for --compare (applied to the "hero" seat only). */
+export const VARIANTS: Record<string, Partial<Genes>> = {
+    current: {},                                          // config.ts as it is
+    old: { preflopSizing: 0, postflopSizing: 0 },         // v1.8.1 button sizes
+    fixed: { preflopSizing: 1, postflopSizing: 1 },       // v1.9.0 typed fixed sizes
+    pre: { preflopSizing: 1, postflopSizing: 0 },         // v1.9.0 preflop sizes only
+    post: { preflopSizing: 0, postflopSizing: 1 },        // v1.9.0 postflop sizes only
+    cont: { preflopSizing: 2, postflopSizing: 2 },        // any size before and after the flop
+    contpost: { preflopSizing: 1, postflopSizing: 2 },    // any size after the flop only
+};
+
+export function variantGenes(name: string): Partial<Genes> {
+    if (name.endsWith(".json")) {
+        const data = JSON.parse(fs.readFileSync(name, "utf8"));
+        return data.bestTuning ?? data.tuning ?? data;
+    }
+    const g = VARIANTS[name];
+    if (!g) throw new Error(`unknown variant "${name}" (known: ${Object.keys(VARIANTS).join(", ")}, or a .json file)`);
+    return g;
+}
+
+/**
+ * Duplicate session: every variant plays the hero seat on the same seed (same cards,
+ * seats, button). Returns the hero's chips won for each variant.
+ */
+export function duplicateSession(pool: string[], variants: Partial<Genes>[], seed: number, opts: CashOptions): number[] {
+    return variants.map(genes => {
+        resetStats();
+        setDealRandom(seededRandom(seed));
+        setDecisionRandom((name, hand) => seededRandom(hashSeed(seed, name, hand)));
+        const seatRandom = seededRandom(seed * 7919 + 17);
+        const counts = new Map<string, number>();
+        const bots = pool.map(type => {
+            const c = (counts.get(type) ?? 0) + 1;
+            counts.set(type, c);
+            return type === "hero" ? smartBot(`hero${c}`, genes) : makeBot(type, `${type}${c}`);
+        });
+        for (let i = bots.length - 1; i > 0; i--) {
+            const j = Math.floor(seatRandom() * (i + 1));
+            [bots[i], bots[j]] = [bots[j], bots[i]];
+        }
+        takeLuck();
+        const result = playCashSession(bots, opts, log => addHand(parseHand(log)), seatRandom);
+        const luck = takeLuck();                          // score all-in hands by expected value
+        setDealRandom(Math.random);
+        setDecisionRandom(null);
+        let won = 0;
+        for (const [label, chips] of result.won) if (label.startsWith("hero")) won += chips + (luck.get(label) ?? 0);
+        return won;
+    });
 }
 
 /** Makes a bot from a type name ("shark" = the extension in Shark mode). */
@@ -70,7 +129,8 @@ export const typeOf = (label: string) => label.replace(/\d+$/, "");
 
 // ---------------------------------------------------------------- worker side
 
-type Job = { id: number, pool: string[], sessions: number, opts: CashOptions };
+type Job = { id: number, pool: string[], sessions: number, opts: CashOptions,
+    variants?: Partial<Genes>[], seeds?: number[], sims?: number };
 type JobResult = { id: number, sessions: [string, number][][] };    // per session: [label, chips won]
 
 function workerMain() {
@@ -80,6 +140,13 @@ function workerMain() {
     CONFIG.gameType = "cash";
     parentPort!.on("message", (job: Job) => {
         const sessions: [string, number][][] = [];
+        if (job.sims) CONFIG.tuning.postflopSims = job.sims;   // faster, rougher postflop for everyone
+        if (job.variants && job.seeds) {                      // duplicate test: [variant index, hero chips]
+            for (const seed of job.seeds)
+                sessions.push(duplicateSession(job.pool, job.variants, seed, job.opts).map((w, i) => [String(i), w]));
+            parentPort!.postMessage({ id: job.id, sessions } as JobResult);
+            return;
+        }
         for (let k = 0; k < job.sessions; k++) {
             resetStats();                                     // new opponents each session
             const counts = new Map<string, number>();
@@ -108,7 +175,7 @@ function arg(name: string, fallback: string) {
 
 /** Plays sessions on all workers. Returns, per session, each label's chips won. */
 export async function runCash(pool: string[], sessions: number, opts: CashOptions, workerCount: number,
-    progress?: (done: number) => void): Promise<[string, number][][]> {
+    progress?: (done: number) => void, duplicate?: { variants: Partial<Genes>[], seed: number, sims?: number }): Promise<[string, number][][]> {
     const workers = Array.from({ length: workerCount }, () => new Worker(__filename));
     const out: [string, number][][] = [];
     const chunk = 2;
@@ -118,7 +185,8 @@ export async function runCash(pool: string[], sessions: number, opts: CashOption
             if (next >= sessions) { if (done >= sessions) resolve(); return; }
             const n = Math.min(chunk, sessions - next);
             next += n;
-            w.postMessage({ id: jobId++, pool, sessions: n, opts } as Job);
+            const seeds = duplicate ? Array.from({ length: n }, (_, k) => duplicate.seed + next - n + k) : undefined;
+            w.postMessage({ id: jobId++, pool, sessions: n, opts, variants: duplicate?.variants, seeds, sims: duplicate?.sims } as Job);
         };
         for (const w of workers) {
             w.on("message", (r: JobResult) => {
@@ -151,6 +219,33 @@ export function summarize(results: [string, number][][], opts: CashOptions) {
     }).sort((a, b) => b.bb100 - a.bb100);
 }
 
+/** Mean and 95% range of a list. */
+function meanCi(xs: number[]) {
+    const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+    const sd = Math.sqrt(xs.reduce((a, b) => a + (b - mean) ** 2, 0) / Math.max(1, xs.length - 1));
+    return { mean, ci95: 1.96 * sd / Math.sqrt(xs.length) };
+}
+
+/** Per-variant hero bb/100, and each variant's difference from the first on the same cards. */
+export function compareResults(results: [string, number][][], count: number, opts: CashOptions) {
+    const toBb100 = (chips: number) => chips / opts.bb / opts.sessionHands * 100;
+    const per = Array.from({ length: count }, (_, i) => results.map(r => toBb100(r[i][1])));
+    return per.map((xs, i) => ({
+        ...meanCi(xs),
+        diff: i === 0 ? null : meanCi(xs.map((x, k) => x - per[0][k])),
+    }));
+}
+
+function printCompare(names: string[], results: [string, number][][], opts: CashOptions) {
+    const rows = compareResults(results, names.length, opts);
+    console.log(`\n  ${"variant".padEnd(28)} ${"bb/100".padStart(8)}   95% range   vs ${names[0]} (same cards)`);
+    rows.forEach((r, i) => {
+        const d = r.diff ? `${r.diff.mean >= 0 ? "+" : ""}${r.diff.mean.toFixed(1)} ± ${r.diff.ci95.toFixed(1)}` : "-";
+        console.log(`  ${names[i].padEnd(28)} ${(r.mean >= 0 ? "+" : "") + r.mean.toFixed(1).padStart(7)}   ±${r.ci95.toFixed(1).padEnd(8)}  ${d}`);
+    });
+    console.log("\n(The difference column is what matters: it compares each variant with the first on identical deals.)");
+}
+
 async function main() {
     const opts: CashOptions = {
         sb: parseFloat(arg("sb", String(CASH_DEFAULTS.sb))),
@@ -163,6 +258,27 @@ async function main() {
     const hands = parseInt(arg("hands", "100000"));
     const sessions = Math.max(1, Math.round(hands / opts.sessionHands));
     const workerCount = Math.min(sessions, parseInt(arg("workers", String(Math.max(1, os.cpus().length - 2)))));
+
+    const compare = arg("compare", "");
+    if (compare) {
+        const names = compare.split(",").map(x => x.trim()).filter(Boolean);
+        const variants = names.map(variantGenes);
+        const heroPool = pool.includes("hero") ? pool : pool.map((t, i) => i === pool.indexOf("smart") ? "hero" : t);
+        if (!heroPool.includes("hero")) throw new Error("--compare needs a smart seat in the pool");
+        const seed = parseInt(arg("seed", "1"));
+        console.log(`Duplicate test: ${names.join(" vs ")} in the hero seat, same cards. Table: ${heroPool.join(", ")}.`);
+        console.log(`${sessions} sessions x ${opts.sessionHands} hands per variant, ${workerCount} workers, seed ${seed}.`);
+        const started = Date.now();
+        let lastShown = 0;
+        const results = await runCash(heroPool, sessions, opts, workerCount, done => {
+            if (done - lastShown >= sessions / 10 || done === sessions) {
+                lastShown = done;
+                console.log(`  ${done * opts.sessionHands} hands each, ${((Date.now() - started) / 1000).toFixed(0)}s`);
+            }
+        }, { variants, seed });
+        printCompare(names, results, opts);
+        return;
+    }
 
     console.log(`Cash game: ${pool.length} seats (${pool.join(", ")}), blinds ${opts.sb}/${opts.bb}, ` +
         `buy-in ${opts.buyIn} (${opts.buyIn / opts.bb} bb), no rake.`);

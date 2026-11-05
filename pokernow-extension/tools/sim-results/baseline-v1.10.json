@@ -1,0 +1,206 @@
+{
+  "date": "2026-11-02T23:57:51.967Z",
+  "tournaments": 1000,
+  "seats": [
+    "smart",
+    "smart",
+    "equity",
+    "equity",
+    "station",
+    "maniac",
+    "nit",
+    "random"
+  ],
+  "payouts": [
+    15,
+    9,
+    4,
+    2,
+    -2,
+    -4,
+    -9,
+    -15
+  ],
+  "bots": {
+    "smart": {
+      "n": 2000,
+      "mean": 6.593,
+      "ci": 0.24715534767376843,
+      "avgPlace": 2.72,
+      "top4": 0.918,
+      "wins": 0.219,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": 85.86749162155198,
+          "hands": 5172
+        },
+        "conservative": {
+          "bbPer100": 99.58130279402195,
+          "hands": 8208
+        },
+        "normal": {
+          "bbPer100": 50.25177105684398,
+          "hands": 19574
+        },
+        "creative": {
+          "bbPer100": 30.003520646608965,
+          "hands": 26889
+        },
+        "headsUp": {
+          "bbPer100": 26.112282222598086,
+          "hands": 23648
+        }
+      }
+    },
+    "nit": {
+      "n": 1000,
+      "mean": 4.457,
+      "ci": 0.3990687388657991,
+      "avgPlace": 3.276,
+      "top4": 0.784,
+      "wins": 0.106,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": 212.8846153846154,
+          "hands": 2548
+        },
+        "conservative": {
+          "bbPer100": 133.13633679237327,
+          "hands": 3951
+        },
+        "normal": {
+          "bbPer100": 48.42938538450232,
+          "hands": 9068
+        },
+        "creative": {
+          "bbPer100": 10.414176993153399,
+          "hands": 11782
+        },
+        "headsUp": {
+          "bbPer100": -14.238484934554668,
+          "hands": 14083
+        }
+      }
+    },
+    "equity": {
+      "n": 2000,
+      "mean": -0.9945,
+      "ci": 0.4020498152253774,
+      "avgPlace": 4.852,
+      "top4": 0.37,
+      "wins": 0.158,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": 368.54342646740326,
+          "hands": 4617
+        },
+        "conservative": {
+          "bbPer100": 166.9513558344152,
+          "hands": 4622
+        },
+        "normal": {
+          "bbPer100": 0.837766518893787,
+          "hands": 7895
+        },
+        "creative": {
+          "bbPer100": -12.084436288140001,
+          "hands": 8991
+        },
+        "headsUp": {
+          "bbPer100": 19.508084996945986,
+          "hands": 10369
+        }
+      }
+    },
+    "random": {
+      "n": 1000,
+      "mean": -3.134,
+      "ci": 0.3992223705299227,
+      "avgPlace": 5.367,
+      "top4": 0.258,
+      "wins": 0.028,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": -536.5684239656844,
+          "hands": 2409
+        },
+        "conservative": {
+          "bbPer100": -354.9558543873948,
+          "hands": 2454
+        },
+        "normal": {
+          "bbPer100": -291.9442371475953,
+          "hands": 2010
+        },
+        "creative": {
+          "bbPer100": -171.47875548245614,
+          "hands": 1824
+        },
+        "headsUp": {
+          "bbPer100": -65.2371709058456,
+          "hands": 1494
+        }
+      }
+    },
+    "maniac": {
+      "n": 1000,
+      "mean": -5.601,
+      "ci": 0.5545444070024874,
+      "avgPlace": 5.977,
+      "top4": 0.195,
+      "wins": 0.091,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": -389.80927034819246,
+          "hands": 1503
+        },
+        "conservative": {
+          "bbPer100": -417.67108167770385,
+          "hands": 755
+        },
+        "normal": {
+          "bbPer100": -192.29893908282003,
+          "hands": 974
+        },
+        "creative": {
+          "bbPer100": 18.319202566452745,
+          "hands": 1091
+        },
+        "headsUp": {
+          "bbPer100": -112.45328719723177,
+          "hands": 1445
+        }
+      }
+    },
+    "station": {
+      "n": 1000,
+      "mean": -6.919,
+      "ci": 0.47844891537867,
+      "avgPlace": 6.236,
+      "top4": 0.187,
+      "wins": 0.021,
+      "bbPer100ByPhase": {
+        "full": {
+          "bbPer100": -501.31578947368433,
+          "hands": 1615
+        },
+        "conservative": {
+          "bbPer100": -1086.1179337231983,
+          "hands": 855
+        },
+        "normal": {
+          "bbPer100": -628.2770054330458,
+          "hands": 1043
+        },
+        "creative": {
+          "bbPer100": -578.9718567251463,
+          "hands": 912
+        },
+        "headsUp": {
+          "bbPer100": -254.64398771556816,
+          "hands": 1411
+        }
+      }
+    }
+  }
+}

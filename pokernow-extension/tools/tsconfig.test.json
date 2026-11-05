@@ -19,6 +19,9 @@
     "../src/ai/postflop/postflopBrain.ts",
     "../src/ai/postflop/riverSolver.ts",
     "../src/table/screenReader.ts",
-    "../src/ai/decide.ts"
+    "../src/ai/decide.ts",
+    "../src/table/recorder.ts",
+    "../src/table/gameRecords.ts",
+    "../src/ui.ts"
   ]
 }

@@ -138,6 +138,28 @@ export function fishBot(label: string): SimBot {
 export const BOT_TYPES: Record<string, (label: string) => SimBot> = {
     smart: l => smartBot(l), equity: equityBot, station: stationBot, maniac: maniacBot, nit: nitBot, random: randomBot,
     fish: fishBot,
+    // The smart brain without the table-phase rules (= v1.10 play), for before/after comparisons.
+    oldsmart: l => smartBot(l, { phaseRules: 0 }),
+    // v1.11.1: phase rules, but no 5+ player all-in limit and no all-in calling floor.
+    prev: l => smartBot(l, { shoveMaxBB: 1000, allInCallFloor: 0 }),
+    // v1.12.0: no careful limits after the flop.
+    vtwelve: l => smartBot(l, { postflopCareful: 0 }),
+    // v1.12.2: checks read as weakness, no sticky callers, barrels allowed.
+    vtwelvetwo: l => smartBot(l, { checkCallRules: 0 }),
+    // v1.12.3: beginners' big bets read with theory bluff shares (more bluffs the bigger the bet).
+    vtwelvethree: l => smartBot(l, { bigBetRule: 0, airRule: 0 }),
+    // v1.12.4 play: no steal bonus, no in-position bonus.
+    vtwelvefour: l => smartBot(l, { positionRules: 0 }),
+    // v1.14.0 play: 4 and 3 players play the standard (looser) style.
+    vfourteen: l => smartBot(l, { shortTight: 0 }),
+    // v1.15.1 play: no bluff gate (bluffs with nothing out of position / later streets / multiway).
+    vfifteen: l => smartBot(l, { bluffGate: 0 }),
+    // v1.15.2 play: no maniac read (big bets of 3-bet-happy players read like anyone else's).
+    vfifteentwo: l => smartBot(l, { maniacRead: 0 }),
+    // v1.15.3 play: a raise after the flop at 5+ players is read as two pair+ only (no draws).
+    vfifteenthree: l => smartBot(l, { wideRaiseRead: 0 }),
+    // v1.15.6 play: all-in math ignores overcallers.
+    vfifteensix: l => smartBot(l, { overcallFactor: 0 }),
 };
 
 export { PreflopPhase };

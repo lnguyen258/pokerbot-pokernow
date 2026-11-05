@@ -1,4 +1,4 @@
-import { allInRaise, call, canCheck, check, fold, halfPotRaise, minRaise, potRaise, tqPotRaise } from "./ui";
+import { call, canCheck, check, fold, getMyStreetBet, getState, raise } from "./ui";
 
 export function performAction(action: Action, callback: () => void) {
     if (action.type === "check_or_fold") {
@@ -14,27 +14,27 @@ export function performAction(action: Action, callback: () => void) {
         callback?.();
     }
     else {
-        switch (action.raiseAmount) {
-            case "min":
-            default:
-                minRaise(callback);
-                break;
-            case "1/2_pot":
-                halfPotRaise(callback);
-                break;
-            // TODO: usare 3/4 pot?
-            // case "3/4_pot":
-            //     tqPotRaise(callback);
-            //     break;
-            case "pot":
-                potRaise(callback);
-                break;
-            // TODO: usare overbet?
-            case "all_in":
-                allInRaise(callback);
-                break;
-        }
+        const preset = action.raiseAmount ?? "min";
+        raise(preset, action.amount ?? presetAmount(preset), callback);
     }
+}
+
+/**
+ * Presets without an exact amount (from the simple bots) are typed in too:
+ * pot = raise to (current bet + the pot after our call), 1/2 pot = half that raise.
+ * Min and all-in stay on their buttons (the page knows those exactly).
+ */
+function presetAmount(preset: RaiseAmount): number | undefined {
+    if (preset !== "pot" && preset !== "1/2_pot") return undefined;
+    try {
+        const state = getState();
+        const currentBet = getMyStreetBet() + state.toCall;
+        const potAfterCall = state.pot + state.toCall;
+        const extra = preset === "pot" ? potAfterCall : Math.round(potAfterCall / 2);
+        const to = currentBet + Math.max(extra, state.bigBlind);
+        return to >= getMyStreetBet() + state.stack ? undefined : to;
+    }
+    catch { return undefined; }
 }
 
 export function sanitizeAction(action: Action | undefined, state: State) {
@@ -65,6 +65,9 @@ export function sanitizeAction(action: Action | undefined, state: State) {
                 sanitized.raiseAmount = "min";
                 break;
         }
+        if (sanitized.amount !== undefined && !(Number.isFinite(sanitized.amount) && sanitized.amount > 0))
+            delete sanitized.amount;
+        if (sanitized.amount !== undefined) sanitized.amount = Math.round(sanitized.amount);
     }
 
     return sanitized;

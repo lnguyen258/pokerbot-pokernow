@@ -5,11 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "test": "tsc -p tools/tsconfig.test.json && node tools/test.js",
+    "test": "tsc -p tools/tsconfig.test.json && node tools/test.js && npm run smoke",
+    "smoke": "webpack --output-path tools/.build-smoke && node tools/smoke.js",
+    "review": "node tools/review.js",
     "sim": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/run.js",
     "tune": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/tune.js",
     "evolve": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/evolve.js",
-    "cash": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/cash.js"
+    "cash": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/cash.js",
+    "evolve-cash": "tsc -p tools/tsconfig.sim.json && node tools/.build-sim/sim/evolveCash.js"
   },
   "author": "",
   "license": "ISC",

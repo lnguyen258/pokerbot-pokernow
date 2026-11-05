@@ -54,14 +54,32 @@
         #profiles div { padding: 2px 0; border-bottom: 1px solid #333; }
         #bot-status {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background: #2a2a2a;
             font-weight: bold;
             color: #bdbdbd;
         }
+        #bot-status.playing { color: #9ccc65; }
+        #bot-status.off { color: #ef9a9a; }
+        #version { text-align: center; font-size: 11px; color: #9e9e9e; }
+        #shark-warning { display: none; margin-top: 8px; padding: 6px; border-radius: 5px; background: #4a2a00;
+            color: #ffcc80; font-size: 12px; text-align: center; }
+        .history-row { margin-top: 16px; font-size: 13px; }
+        .history-row button { padding: 4px 10px; font-size: 12px; background: #3a3a3a; color: #e0e0e0; margin-left: 6px; }
+        #history { margin-top: 6px; font-size: 11px; color: #bdbdbd; max-height: 200px; overflow-y: auto; }
+        #history div { padding: 3px 0; border-bottom: 1px solid #333; }
+        #history .why { color: #8a8a8a; }
     </style>
 </head>
 <body>
     <h1>PokerNow Bot</h1>
+    <div id="version"></div>
+    <div id="bot-status">Checking this tab...</div>
+    <div id="shark-warning">Shark mode is ON: plays looser and calls lighter, for tables of strong players.
+        Turn it off for beginner tables.</div>
+    <div class="hint" style="text-align:center">Starts by itself on a game page. Kill keeps it off until Start or a page reload.</div>
     <div class="button-container">
         <button id="start-bot">Start Bot</button>
         <button id="kill-bot">Kill Bot</button>
@@ -76,10 +94,15 @@
         <div class="hint">Off = normal mode (beginners and fish: big bets mean strong hands).
             On = settings evolved against strong players. Takes effect on the next decision.</div>
     </div>
-    <div class="auto-row">
-        <label><input id="auto-start" type="checkbox"> Turn the bot back on when a game page opens</label>
-        <div class="hint">Register and take your seat yourself, then the bot plays. Keep the table visible:
-            Chrome slows down hidden tabs and the bot could miss its turn.</div>
+    <div class="history-row">
+        <b>Recorded games</b> <span id="games-summary">...</span>
+        <div><button id="download-games">Download games</button><button id="clear-games">Clear</button></div>
+        <div class="hint">Every hand is recorded from the screen. Clean hands also teach the bot about opponents.
+            Then run <code>npm run review</code> on the downloaded file.</div>
+    </div>
+    <div class="history-row">
+        <b>Recent decisions</b><button id="copy-history">Copy</button>
+        <div id="history"></div>
     </div>
     <div class="import-row">
         <label for="import-logs">Import past game logs (PokerNow CSV downloads)</label>
@@ -87,7 +110,5 @@
         <div id="import-status"></div>
         <div id="profiles"></div>
     </div>
-    <div id="bot-status">Bot Status: Off</div>
-    <script src="popup.js"></script>
 </body>
 </html>

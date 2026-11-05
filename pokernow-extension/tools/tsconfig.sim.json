@@ -16,6 +16,7 @@
     "../src/sim/run.ts",
     "../src/sim/tune.ts",
     "../src/sim/evolve.ts",
-    "../src/sim/cash.ts"
+    "../src/sim/cash.ts",
+    "../src/sim/evolveCash.ts"
   ]
 }

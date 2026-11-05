@@ -1,0 +1,299 @@
+{
+ "settings": {
+  "generations": 2,
+  "population": 3,
+  "sessions": 2,
+  "elites": 1,
+  "finalSessions": 2,
+  "sims": 400,
+  "seed": 481597
+ },
+ "generation": 2,
+ "nextId": 4,
+ "population": [
+  {
+   "id": "original",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 1000,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182,
+    "openSizeBB": 2.5,
+    "openSizeCashBB": 3,
+    "threeBetSize": 3,
+    "preflopSizing": 2,
+    "openPerLimper": 1,
+    "openFishBonus": 0.5,
+    "openSbBonus": 0.5,
+    "threeBetOopExtra": 0.5,
+    "threeBetFishBonus": 0.5,
+    "postflopSizing": 2,
+    "maxOverbet": 1.5,
+    "sizeSpread": 0.08,
+    "reverseImplied": 0,
+    "bigBetRange": 0.08,
+    "bluffBelief": 0.5
+   },
+   "born": 0,
+   "parents": [],
+   "sum": 0,
+   "sq": 0,
+   "n": 3.2
+  },
+  {
+   "id": "c1",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 1000,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182,
+    "openSizeBB": 2.5,
+    "openSizeCashBB": 3,
+    "threeBetSize": 3,
+    "preflopSizing": 2,
+    "openPerLimper": 1,
+    "openFishBonus": 0.5,
+    "openSbBonus": 0.5,
+    "threeBetOopExtra": 0.5,
+    "threeBetFishBonus": 0.5,
+    "postflopSizing": 2,
+    "maxOverbet": 1.5,
+    "sizeSpread": 0.1,
+    "reverseImplied": 0,
+    "bigBetRange": 0.08,
+    "bluffBelief": 0.5
+   },
+   "born": 0,
+   "parents": [
+    "original"
+   ],
+   "sum": 1138.5666666666666,
+   "sq": 3033737.1611111113,
+   "n": 3.2
+  },
+  {
+   "id": "c3",
+   "tuning": {
+    "openScale": 0.649,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 1000,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182,
+    "openSizeBB": 2.5,
+    "openSizeCashBB": 3,
+    "threeBetSize": 3,
+    "preflopSizing": 2,
+    "openPerLimper": 1,
+    "openFishBonus": 0.5,
+    "openSbBonus": 0.5,
+    "threeBetOopExtra": 0.5,
+    "threeBetFishBonus": 0.5,
+    "postflopSizing": 2,
+    "maxOverbet": 1.5,
+    "sizeSpread": 0.1,
+    "reverseImplied": 0,
+    "bigBetRange": 0.08,
+    "bluffBelief": 0.5
+   },
+   "born": 1,
+   "parents": [
+    "c1"
+   ],
+   "sum": -2026.3333333333333,
+   "sq": 6272525.888888888,
+   "n": 2
+  }
+ ],
+ "history": [
+  {
+   "generation": 1,
+   "seed": 581600,
+   "originalBb100": 470.75,
+   "ranking": [
+    [
+     "c1",
+     745.333
+    ],
+    [
+     "c2",
+     40.167
+    ],
+    [
+     "original",
+     0
+    ]
+   ]
+  },
+  {
+   "generation": 2,
+   "seed": 681603,
+   "originalBb100": 1321,
+   "ranking": [
+    [
+     "c1",
+     355.802
+    ],
+    [
+     "original",
+     0
+    ],
+    [
+     "c3",
+     -1013.167
+    ]
+   ]
+  }
+ ],
+ "hall": [
+  {
+   "id": "c1",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 1000,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182,
+    "openSizeBB": 2.5,
+    "openSizeCashBB": 3,
+    "threeBetSize": 3,
+    "preflopSizing": 2,
+    "openPerLimper": 1,
+    "openFishBonus": 0.5,
+    "openSbBonus": 0.5,
+    "threeBetOopExtra": 0.5,
+    "threeBetFishBonus": 0.5,
+    "postflopSizing": 2,
+    "maxOverbet": 1.5,
+    "sizeSpread": 0.1,
+    "reverseImplied": 0,
+    "bigBetRange": 0.08,
+    "bluffBelief": 0.5
+   },
+   "generation": 1,
+   "edge": 745.333
+  },
+  {
+   "id": "c1",
+   "tuning": {
+    "openScale": 0.631,
+    "threeBetEquity": 0.531,
+    "callPenaltyIP": 0.022,
+    "callPenaltyOOP": 0.096,
+    "realiseOOP": 0.893,
+    "postflopTemperature": 0.057,
+    "postflopSims": 1000,
+    "riverSolver": 1,
+    "riverIterations": 300,
+    "isolateFish": 1,
+    "exploitCutoff": 0.182,
+    "openSizeBB": 2.5,
+    "openSizeCashBB": 3,
+    "threeBetSize": 3,
+    "preflopSizing": 2,
+    "openPerLimper": 1,
+    "openFishBonus": 0.5,
+    "openSbBonus": 0.5,
+    "threeBetOopExtra": 0.5,
+    "threeBetFishBonus": 0.5,
+    "postflopSizing": 2,
+    "maxOverbet": 1.5,
+    "sizeSpread": 0.1,
+    "reverseImplied": 0,
+    "bigBetRange": 0.08,
+    "bluffBelief": 0.5
+   },
+   "generation": 2,
+   "edge": 355.802
+  }
+ ],
+ "playoff": {
+  "date": "2026-11-02T23:21:32.649Z",
+  "table": [
+   {
+    "id": "original",
+    "bb100": 1388.583,
+    "vsOriginal": 0,
+    "ci": 0
+   },
+   {
+    "id": "old buttons",
+    "bb100": 780.583,
+    "vsOriginal": -608,
+    "ci": 402.127
+   },
+   {
+    "id": "c1",
+    "bb100": 501.917,
+    "vsOriginal": -886.667,
+    "ci": 1005.153
+   },
+   {
+    "id": "fixed (v1.9.0)",
+    "bb100": 484.417,
+    "vsOriginal": -904.167,
+    "ci": 1348.153
+   },
+   {
+    "id": "c3",
+    "bb100": 82.833,
+    "vsOriginal": -1305.75,
+    "ci": 1826.557
+   }
+  ],
+  "winner": "original",
+  "bestTuning": {
+   "openScale": 0.631,
+   "threeBetEquity": 0.531,
+   "callPenaltyIP": 0.022,
+   "callPenaltyOOP": 0.096,
+   "realiseOOP": 0.893,
+   "postflopTemperature": 0.057,
+   "postflopSims": 1000,
+   "riverSolver": 1,
+   "riverIterations": 300,
+   "isolateFish": 1,
+   "exploitCutoff": 0.182,
+   "openSizeBB": 2.5,
+   "openSizeCashBB": 3,
+   "threeBetSize": 3,
+   "preflopSizing": 2,
+   "openPerLimper": 1,
+   "openFishBonus": 0.5,
+   "openSbBonus": 0.5,
+   "threeBetOopExtra": 0.5,
+   "threeBetFishBonus": 0.5,
+   "postflopSizing": 2,
+   "maxOverbet": 1.5,
+   "sizeSpread": 0.08,
+   "reverseImplied": 0,
+   "bigBetRange": 0.08,
+   "bluffBelief": 0.5
+  }
+ }
+}

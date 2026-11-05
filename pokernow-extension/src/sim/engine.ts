@@ -52,8 +52,11 @@ export const DEFAULT_OPTIONS: TournamentOptions = {
 
 export type TournamentResult = { places: Map<string, number>, hands: number };
 
+/** One hand's result: how many players were dealt in, the big blind, and each player's chip change. */
+export type HandResult = { players: number, bb: number, deltas: { label: string, chips: number }[] };
+
 export function playTournament(bots: SimBot[], opts: TournamentOptions = DEFAULT_OPTIONS,
-    onHand?: (log: string[]) => void): TournamentResult {
+    onHand?: (log: string[]) => void, onResult?: (r: HandResult) => void): TournamentResult {
     const seats: Seat[] = bots.map((bot, i) => ({
         seat: i + 1, name: bot.label, id: `id-${bot.label}`, bot, stack: opts.startStack,
     }));
@@ -68,6 +71,10 @@ export function playTournament(bots: SimBot[], opts: TournamentOptions = DEFAULT
         do button = (button + 1) % seats.length; while (seats[button].stack <= 0);
         const log = playHand(seats, alive, seats[button], level, handNumber, ++globalHandId);
         onHand?.(log);
+        onResult?.({
+            players: alive.length, bb: level[1],
+            deltas: alive.map(s => ({ label: s.name, chips: s.stack - (startStacks.get(s.id) ?? s.stack) })),
+        });
 
         const busted = alive.filter(s => s.stack <= 0);
         if (busted.length) {
@@ -85,6 +92,51 @@ export function playTournament(bots: SimBot[], opts: TournamentOptions = DEFAULT
 const startStacks = new Map<string, number>();
 let globalHandId = 0;          // unique across tournaments, like PokerNow's hand ids
 
+/** Random numbers for dealing. Seed it to deal the same cards again (duplicate tests). */
+let dealRandom: () => number = Math.random;
+export function setDealRandom(r: () => number) { dealRandom = r; }
+
+/**
+ * Random numbers for each player's decisions, restarted every hand (duplicate tests).
+ * With it, two runs only differ where a bot really decides differently, and only in
+ * that hand. Null = plain Math.random.
+ */
+let decisionRandom: ((name: string, hand: number) => () => number) | null = null;
+export function setDecisionRandom(f: ((name: string, hand: number) => () => number) | null) { decisionRandom = f; }
+
+/**
+ * All-in luck, for fairer scoring. When the money goes in before the river and nobody
+ * can act any more, the cards still to come are pure luck. For each such hand this adds
+ * (what the player was expected to win, averaged over possible runouts) minus (what they
+ * actually won). Adding it to a player's result scores them by their decisions, not by
+ * the runout. Play itself is unchanged. Cleared by the caller (takeLuck).
+ */
+const luck = new Map<string, number>();
+export function takeLuck(): Map<string, number> {
+    const copy = new Map(luck);
+    luck.clear();
+    return copy;
+}
+
+/** A number from a string (FNV-1a), to build seeds from names. */
+export function hashSeed(...parts: (string | number)[]): number {
+    let h = 2166136261;
+    for (const ch of parts.join("|")) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+}
+
+/** A small fast seeded generator (mulberry32): same seed, same numbers. */
+export function seededRandom(seed: number): () => number {
+    let a = seed >>> 0;
+    return () => {
+        a = (a + 0x6D2B79F5) >>> 0;
+        let t = a;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
 export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb]: [number, number], n: number, uid: number): string[] {
     const log: string[] = [];
     const say = (p: Seat, what: string) => log.push(`"${p.name} @ ${p.id}" ${what}`);
@@ -95,13 +147,21 @@ export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb
     const order = alive.slice(bi + 1).concat(alive.slice(0, bi + 1));     // ... ends with the button
     const deck = Array.from({ length: 52 }, (_, i) => i);
     for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(dealRandom() * (i + 1));
         [deck[i], deck[j]] = [deck[j], deck[i]];
     }
     const players: InHand[] = order.map(p => ({
         p, hole: [deck.pop()!, deck.pop()!], folded: false, allIn: false, streetBet: 0, total: 0, needsToAct: true,
     }));
     const board: number[] = [];
+    let lastDecisionBoard = 0;                 // board size at the last decision anyone made
+    const streams = new Map<string, () => number>();
+    const randomFor = (name: string) => {
+        if (!decisionRandom) return null;
+        let r = streams.get(name);
+        if (!r) { r = decisionRandom(name, n); streams.set(name, r); }
+        return r;
+    };
 
     log.push(`-- starting hand #${n} (id: sim${uid})  No Limit Texas Hold'em (dealer: "${buttonSeat.name} @ ${buttonSeat.id}") --`);
     log.push("Player stacks: " + [...alive].sort((a, b) => a.seat - b.seat)
@@ -141,6 +201,9 @@ export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb
             const pot = players.reduce((s, x) => s + x.total, 0);
             const others = players.filter(x => x !== h && !x.folded && !x.allIn);
             let action: Action;
+            lastDecisionBoard = board.length;
+            const ownRandom = randomFor(h.p.name), savedRandom = Math.random;
+            if (ownRandom) Math.random = ownRandom;
             try {
                 action = h.p.bot.decide({
                     log: log.slice(), hole: h.hole, board: board.slice(), street, name: h.p.name,
@@ -149,6 +212,9 @@ export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb
             }
             catch (err) {
                 action = { type: "check_or_fold" };
+            }
+            finally {
+                Math.random = savedRandom;
             }
 
             let kind = action.type;
@@ -166,6 +232,7 @@ export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb
                 const minTarget = currentBet + Math.max(lastRaise, bb);
                 const maxTarget = h.streetBet + h.p.stack;
                 let target = action.raiseAmount === "all_in" ? maxTarget
+                    : action.amount !== undefined ? Math.round(action.amount)       // exact "raise to"
                     : action.raiseAmount === "pot" ? currentBet + potAfterCall
                     : action.raiseAmount === "1/2_pot" ? currentBet + Math.round(potAfterCall / 2)
                     : minTarget;
@@ -215,25 +282,50 @@ export function playHand(seats: Seat[], alive: Seat[], buttonSeat: Seat, [sb, bb
         say(contenders[0].p, `collected ${pot} from pot`);
     }
     else {
+        // Side pots, from the smallest all-in level up. Returns what each player wins.
+        const levels = [...new Set(players.map(h => h.total).filter(t => t > 0))].sort((a, b) => a - b);
+        const payout = (fullBoard: number[]) => {
+            const score = new Map(contenders.map(h => [h, evaluate(h.hole.concat(fullBoard))]));
+            const won = new Map<InHand, number>();
+            let prev = 0;
+            for (const level of levels) {
+                const pot = players.reduce((s, h) => s + Math.max(0, Math.min(h.total, level) - prev), 0);
+                const eligible = contenders.filter(h => h.total >= level);
+                prev = level;
+                if (!pot || !eligible.length) continue;
+                const best = Math.max(...eligible.map(h => score.get(h)!));
+                const winners = eligible.filter(h => score.get(h) === best);
+                const share = Math.floor(pot / winners.length);
+                winners.forEach((h, k) => won.set(h, (won.get(h) ?? 0) + share + (k === 0 ? pot - share * winners.length : 0)));
+            }
+            return won;
+        };
+        const known = board.slice(0, lastDecisionBoard);          // cards seen when the last decision was made
         while (board.length < 5) board.push(deck.pop()!);
         for (const h of contenders) say(h.p, `shows a ${cardText(h.hole[0])}, ${cardText(h.hole[1])}.`);
-        const score = new Map(contenders.map(h => [h, evaluate(h.hole.concat(board))]));
-        // Side pots, from the smallest all-in level up.
-        const levels = [...new Set(players.map(h => h.total).filter(t => t > 0))].sort((a, b) => a - b);
-        let prev = 0;
-        for (const level of levels) {
-            const pot = players.reduce((s, h) => s + Math.max(0, Math.min(h.total, level) - prev), 0);
-            const eligible = contenders.filter(h => h.total >= level);
-            prev = level;
-            if (!pot || !eligible.length) continue;
-            const best = Math.max(...eligible.map(h => score.get(h)!));
-            const winners = eligible.filter(h => score.get(h) === best);
-            const share = Math.floor(pot / winners.length);
-            winners.forEach((h, k) => {
-                const won = share + (k === 0 ? pot - share * winners.length : 0);
-                h.p.stack += won;
-                say(h.p, `collected ${won} from pot`);
+        const actual = payout(board);
+        for (const h of contenders) {
+            const won = actual.get(h) ?? 0;
+            if (won > 0) { h.p.stack += won; say(h.p, `collected ${won} from pot`); }
+        }
+        if (known.length < 5) {
+            // Average over runouts of the cards that came after the last decision.
+            const used = new Set([...known, ...contenders.flatMap(h => h.hole)]);
+            const rest = Array.from({ length: 52 }, (_, i) => i).filter(c => !used.has(c));
+            const expected = new Map<InHand, number>();
+            const need = 5 - known.length;
+            const samples = need === 1 ? rest.map(c => [c]) : Array.from({ length: 200 }, () => {
+                const pick: number[] = [];
+                while (pick.length < need) {
+                    const c = rest[Math.floor(Math.random() * rest.length)];
+                    if (!pick.includes(c)) pick.push(c);
+                }
+                return pick;
             });
+            for (const extra of samples)
+                for (const [h, w] of payout(known.concat(extra))) expected.set(h, (expected.get(h) ?? 0) + w / samples.length);
+            for (const h of contenders)
+                luck.set(h.p.name, (luck.get(h.p.name) ?? 0) + (expected.get(h) ?? 0) - (actual.get(h) ?? 0));
         }
     }
     log.push(`-- ending hand #${n} --`);

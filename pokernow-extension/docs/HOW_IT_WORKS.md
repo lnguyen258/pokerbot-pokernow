@@ -28,7 +28,7 @@ what to run, where, and with what permissions. This one has three parts:
             │     │   clicks fold / check / call / raise                   │
             │     ▼                                                        │
             │  chrome.storage.local  ◄── shared by popup and content script │
-            │  (your name, Shark mode, opponent profiles, autopilot)       │
+            │  (game type, Shark mode, opponent profiles, status)           │
             └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -98,9 +98,12 @@ listens with `chrome.runtime.onMessage` (bottom of `src/main.ts`):
 
 | Message | Sent when | What the content script does |
 |---|---|---|
-| `start_bot` | You press **Start Bot** (only allowed on a PokerNow page) | Starts the turn loop, saves `botEnabled: true` |
-| `kill_bot` | You press **Kill Bot** | Stops the loop, saves `botEnabled: false` |
-| `get_bot_status` | Every 0.5 s while the popup is open | Replies `off`, or `playing, last decision: smart brain` / `QUICK BOT (reason)` |
+| `start_bot` | You press **Start Bot** | Starts the turn loop (clears a Kill) |
+| `kill_bot` | You press **Kill Bot** | Stops the loop; stays off on this page until Start or a reload |
+| `get_bot_status` | Every 1 s while the popup is open | Replies `playing, last decision: ...`, `off: killed ...`, `off: ... another tab`, or `waiting: not a game page` |
+
+Opening the popup never starts or stops anything. If the tab has no bot (opened before the extension was
+installed or reloaded), the popup says to reload the page.
 
 ### Shared storage: `chrome.storage.local`
 
@@ -109,8 +112,9 @@ Both sides read and write the same storage, which survives restarts:
 | Key | Written by | Used for |
 |---|---|---|
 | `sharkMode` | Popup checkbox | Normal or Shark settings, read before every decision (`src/mode.ts`) |
-| `botEnabled` | Start / Kill | Auto-start: turns the bot back on when the game page reloads |
-| `autopilot` | Popup checkbox | Auto-start setting (`src/autopilot.ts`) |
+| `gameRecords` | Hand recorder (content script) | Recorded hands per game, last 50 games (docs/LEARNING_PIPELINE.md) |
+| `recentDecisions` | Content script | The last 15 decisions shown in the popup |
+| `activeBot` | Content script on start | `{game, id}` of the newest bot: an older bot on the same game in another tab stops |
 | `opponentStore` | Content script and log import | Opponent profiles: counts of every player's actions, up to 20,000 hands remembered |
 
 The content script listens for storage changes (`chrome.storage.onChanged`), so a log import from the popup reaches
@@ -170,10 +174,12 @@ The **smart brain** (`smartBrain.ts` → `decide.ts`):
    - At 15 big blinds or less it plays all-in or fold (`pushFold.ts`).
    - It weighs tournament points by ICM (`icm.ts`), so busting costs what it really costs.
    - Fish who limp get raised wider.
+   - Sizes: opens to 2.5 bb (tournament) or 3 bb (cash), plus 1 bb per limper; 3-bets to 3× the raise in position,
+     3.5× out of position, plus 1× per caller (all-in instead if that's 40%+ of the stack). Knobs in `CONFIG.tuning`.
 3. **After the flop** (`postflop/`):
    - Narrows each opponent's range by their actions (`postflopRanges.ts`).
    - Simulates about 1,000 random deals of the remaining cards and scores each option by expected value
-     (check, bet ½ pot, bet pot, all-in, fold, call, raise). Draws, who folds to which bet size, and position are
+     (check, bet ⅓ / ½ / ¾ / full pot, all-in; or fold, call, raise ½ pot / full pot). Draws, who folds to which bet size, and position are
      taken into account (`postflopBrain.ts`).
    - Heads-up on the river it solves the spot with a CFR+ game-theory solver (`riverSolver.ts`).
      Against a fish it uses the expected-value rules instead, to exploit their habits.
@@ -183,21 +189,25 @@ opponents are left. The popup status shows when it was used and why.
 
 ### 5.5 Think time (`src/timing.ts`)
 The whole turn, including the decision, is fitted into **2–5 s** (`CONFIG.timing`):
-- **Preflop:** about 2.0–2.7 s for every action.
-- **After the flop:** it varies with the hand, and long thinks are mixed between strong hands and bluffs so timing says nothing.
+- **Every street (preflop too):** it varies with the hand, and long thinks are mixed between strong hands and bluffs so timing says nothing.
 
 ### 5.6 Clicking (`src/action.ts`, `src/ui.ts`)
 - **Fold, check or call:** clicks PokerNow's matching button. "Check or fold" checks when it can and folds otherwise.
-- **A raise:** opens the raise menu, clicks the preset (min, ½ pot, pot, all-in) and submits.
+- **A raise:** opens the raise menu, **types the exact amount** ("raise to": our total bet on this street) into the
+  bet box, checks the box kept it, and submits. If the box is missing, shows a different number, or the page disables
+  submit, it clicks the nearest preset button instead (console: `[raise] ... using the ... button instead`).
+  All-in always uses the all-in button. Brains choose amounts with `src/ai/sizing.ts` (`raiseTo`).
 - Then the loop goes back to waiting for the next turn.
   Between turns it also clicks **Show hand** when PokerNow offers it.
 
 ---
 
-## 6. Autopilot (`src/autopilot.ts`)
+## 6. Auto-start (`src/main.ts`)
 
-One optional setting in the popup:
-- **Auto-start:** if the bot was on when the page closed or reloaded, it starts again by itself when a game page opens.
+- On a game page (`/games/<id>` on PokerNow) the bot starts by itself, checked every second (PokerNow can open a
+  game without reloading the page).
+- **Kill** keeps it off on that page until **Start** or a page reload. A reload always starts a fresh bot.
+- One bot per game: the newest one plays. If the same game is open in two tabs, the older tab's bot stops.
 
 You register and take your seat yourself (auto-seat was removed in 1.7.0). The extension never registers for
 tournaments, takes seats or moves between games by itself.
@@ -275,7 +285,9 @@ class names and text formats, or `src/ui.ts` must be changed to match your page.
 | Players | `.table-player` | Your seat also has `.you-player`. Folded or empty seats have `fold`, `empty`, etc. in their class |
 | My name | `.you-player .table-player-name` | Used if no name is set in the popup |
 | Buttons | `button.fold`, `button.check`, `button.call`, `button.raise` | Clickable; `button.check` is `disabled` when you can't check |
-| Raise menu | after clicking `button.raise`: `.default-bet-buttons button` (min, ½ pot, ¾ pot, pot, all-in, in that order) and `.raise-controller-form input[type="submit"]` | Presets then submit |
+| Raise menu | after clicking `button.raise`: `.default-bet-buttons button` (min, ½ pot, ¾ pot, pot, all-in, in that order) and `.raise-controller-form input[type="submit"]` | Presets then submit (backup only) |
+| Bet box | first number/text `input` inside `.raise-controller-form` | Typed via the native value setter + `input`/`change` events |
+| Your bet in front | `.you-player .table-player-bet-value` | Used to work out "raise to" for typed presets |
 | Show hand (optional) | `button.show-your-hand` | |
 
 ### 9.3 The seats (smart brain)

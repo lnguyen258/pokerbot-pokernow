@@ -5,7 +5,7 @@
  *   - postflop: range-based decisions with draw-aware bet sizing (postflop/postflopBrain.ts)
  */
 import { CONFIG } from "../config";
-import { TableView, opponentsInHand, situationOf } from "../table/tableView";
+import { TableView, opponentsInHand, phaseTag, situationOf } from "../table/tableView";
 import { profile } from "../table/stats";
 import { requiredEquityAllIn } from "./icm";
 import { equityAction } from "./equity/equityAi";
@@ -14,9 +14,10 @@ import { preflopRange } from "./preflop/playerRanges";
 import { postflopDecide } from "./postflop/postflopBrain";
 
 export function decideWithView(view: TableView, state: State, log: (msg: string) => void = console.log): Action {
+    const tag = phaseTag(view);
     if (state.phase.name === "preflop") {
         const d = preflopDecide(view, state);
-        log(`[preflop] ${d.reason}`);
+        log(`${tag} [preflop] ${d.reason}`);
         return d.action;
     }
 
@@ -42,11 +43,11 @@ export function decideWithView(view: TableView, state: State, log: (msg: string)
             profileOf: p => profile(p.id, p.name, situationOf(view, p)),
             callPressure,
         });
-        log(`[postflop] ${d.reason}`);
+        log(`${tag} [postflop] ${d.reason}`);
         return d.action;
     }
     catch (err) {
-        console.error("[postflop] error, using the equity bot instead:", err);
+        console.error(`${tag} [postflop] error, using the equity bot instead:`, err);
         return equityAction(state, {
             ranges: opps.map(p => preRanges.get(p.id)!),
             callPressure,

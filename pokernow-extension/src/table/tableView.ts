@@ -38,8 +38,15 @@ export function buildTableView(log: HandLog, myName: string | undefined, myDomSt
     const sbPoster = log.actions.find(a => a.kind === "sb")?.id;
     const bbPoster = log.actions.find(a => a.kind === "bb")?.id;
 
-    // Rotate the seats so the small blind comes first.
+    // v1.15.8: no small blind posted (its seat just emptied after a bust): the big blind still
+    // posts and the seat before it is the button. Before this fix the seat after the dealer was
+    // taken as the small blind, so the real big blind looked like a limper and the bot thought
+    // it was the big blind while it was first to act (QTs "isolation" raise, real game).
+    const deadSb = bySeat.length > 2 && !sbPoster && bySeat.some(p => p.id === bbPoster);
+
+    // Rotate the seats so the small blind (or, with no small blind, the button) comes first.
     let sbIndex = bySeat.findIndex(p => p.id === sbPoster);
+    if (deadSb) sbIndex = (bySeat.findIndex(p => p.id === bbPoster) + bySeat.length - 1) % bySeat.length;
     if (sbIndex < 0) {
         const dealer = bySeat.findIndex(p => p.id === log.dealerId);
         if (dealer < 0) return null;
@@ -55,8 +62,13 @@ export function buildTableView(log: HandLog, myName: string | undefined, myDomSt
     const views: SeatView[] = fromSb.map((p, i) => {
         let position: string;
         if (n === 2) position = i === 0 ? "BTN/SB" : "BB";
-        else if (i === 0) position = "SB";
+        else if (i === 0) position = deadSb ? "BTN" : "SB";
         else if (i === 1) position = "BB";
+        else if (deadSb) {
+            // Button is seat 0 here, so the last seat is the cutoff.
+            const fromButton = n - i, nonBlind = n - 1;
+            position = fromButton === nonBlind - 1 && nonBlind >= 3 ? "UTG" : LATE_TO_EARLY[fromButton] ?? `EP${i}`;
+        }
         else {
             const fromButton = n - 1 - i, nonBlind = n - 2;
             position = fromButton === nonBlind - 1 && nonBlind >= 3 ? "UTG" : LATE_TO_EARLY[fromButton] ?? `EP${i}`;
@@ -129,4 +141,24 @@ export function playersBehind(view: TableView): SeatView[] {
 export function situationOf(view: TableView, p: SeatView) {
     const avg = view.players.reduce((s, x) => s + x.startStack, 0) / Math.max(1, view.players.length);
     return { stack: p.startStack, bb: view.bb, tableAverage: avg };
+}
+
+/**
+ * Table phase by how many players are still in the tournament (dealt in this hand).
+ * Each phase plays a different style (REFORM.md):
+ *   full (6-8): very tight | conservative (5) | normal (4, the bubble) | creative (3) | headsUp (2)
+ */
+export type TablePhase = "full" | "conservative" | "normal" | "creative" | "headsUp";
+
+export function phaseForPlayers(n: number): TablePhase {
+    return n >= 6 ? "full" : n === 5 ? "conservative" : n === 4 ? "normal" : n === 3 ? "creative" : "headsUp";
+}
+
+export function tablePhase(view: TableView): TablePhase {
+    return phaseForPlayers(view.players.length);
+}
+
+/** Log prefix, e.g. "[full 7p]". */
+export function phaseTag(view: TableView): string {
+    return `[${tablePhase(view)} ${view.players.length}p]`;
 }

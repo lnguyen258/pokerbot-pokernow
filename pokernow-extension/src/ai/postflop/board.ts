@@ -31,6 +31,7 @@ export type BoardInfo = {
     outs: number[],
     hitNext: number[],
     hitByRiver: number[],
+    twoPairPlus: boolean[],    // two pair or better using a hole card (a board pair alone doesn't count)
 };
 
 const WHEEL = (1 << 12) | 0b1111;
@@ -109,7 +110,12 @@ export function analyzeBoard(board: number[]): BoardInfo {
         });
     }
 
-    const info = { live, made, flushDraw, straightOuts, outs, hitNext, hitByRiver };
+    const boardCategory = Math.floor(evaluate(board) / 16 ** 5);
+    const twoPairPlus = scores.map(sc => {
+        const c = Math.floor(sc / 16 ** 5);
+        return c >= 3 || (c === 2 && boardCategory === 0);
+    });
+    const info = { live, made, flushDraw, straightOuts, outs, hitNext, hitByRiver, twoPairPlus };
     if (cache.size > 64) cache.clear();
     cache.set(key, info);
     return info;

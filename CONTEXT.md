@@ -33,17 +33,18 @@ the bot for the user; this file covers state, decisions, gotchas and open work.
 | `pokernow-extension/` | **The live bot**: Chrome extension (MV3, TypeScript, webpack), originally github.com/EsawAdhana/pokernow-bot |
 | `poker_now_log_pglAXBOT3xEA2PCEteO7Cq5_i.csv` | Real PokerNow log (13 hands). Used by tests |
 | `README.md` | User-facing explanation and results |
+| `pokernow-extension/docs/LEARNING_PIPELINE.md` | Record every hand from the screen -> learn opponent profiles -> export JSON -> `npm run review` report |
+| `pokernow-extension/SUMMARY_REFERENCE.md` | Study of huynq55-v3/poker_tournament (Rust Deep CFR bot the user says is top on PokerNow): position features, seat thresholds, ICM tax, payouts, ideas ranked by REFORM part. Don't adopt its lobby auto-join or PokerStars scripts |
 
 Extension source (`pokernow-extension/src/`):
 
 | Path | Role |
 |---|---|
-| `main.ts` | Content-script loop (500 ms), think-time delay, `running` flag, auto-start |
+| `main.ts` | Content-script loop (500 ms), think-time delay, auto-start on game pages, Kill, one bot per game |
 | `ui.ts` | DOM reading and clicking (selectors from the original repo) |
 | `action.ts` | Executes `check_or_fold` / `call` / `raise` with presets `min`, `1/2_pot`, `pot`, `all_in` |
 | `config.ts` | Payouts, brain choice, push/fold depth, timing, `tuning` knobs (incl. river solver) |
 | `timing.ts` | Think time by hand strength, deliberately mixed so timing isn't readable |
-| `autopilot.ts` | Auto-start and auto-seat (selectors from pokernow-gpt) |
 | `table/logReader.ts` | Parses PokerNow log lines; fetches `/api/games/<id>/log_v3` |
 | `table/csvLog.ts` | Parses log CSV downloads (columns `entry,at,order`, newest first) |
 | `table/tableView.ts` | Seats, positions, stacks, invested, `situationOf()` |
@@ -55,16 +56,19 @@ Extension source (`pokernow-extension/src/`):
 | `ai/postflop/` | Board/draw analysis, postflop range narrowing, EV-based bet sizing, **river CFR+ solver** |
 | `ai/equity/` | Hand evaluator, Monte Carlo equity, step-3 equity bot (fallback) |
 | `sim/` | 8-player Sit & Go dealer (writes PokerNow-format logs), sim bots, runner, tuner |
-| `pages/popup.*` | Popup: start/stop, name, autopilot toggles, log import, profile list |
+| `pages/popup.*` | Popup: status first, start/kill, game type, shark mode, log import, profile list |
 
 Data: `src/ai/data/equity169.json` (169Ã—169 preflop equities, built by `tools/buildEquityTable.js`).
 
 ## Commands (from `pokernow-extension/`)
 
-- `npm test`: math, parser and scenario tests (`tools/test.js`), incl. the real CSV
+- `npm test`: math, parser and scenario tests (`tools/test.js`), incl. the real CSV, then `npm run smoke`
+  (`tools/smoke.js`: loads the built main.js into fake empty pages; catches load-time crashes, popup answer,
+  auto-start, Kill, one bot per game, takeover). `TODO [part N]` lines are REFORM targets, not failures
 - `npm run build`: builds `dist/` (what Chrome loads). **The user's Chrome runs `dist/`**: to
   verify a build without touching it, use `npx webpack --output-path <scratch dir>`
-- `npm run sim -- --tournaments 500 [--seats smart,equity,...] [--memory]`: about 5 tournaments/sec
+- `npm run sim -- --tournaments 500 [--seats smart,equity,...] [--memory] [--save name]`: about 2 tournaments/sec now;
+  also prints bb/100 by table phase; `--save` writes tools/sim-results/<name>.json
 - `npm run tune -- --rounds 8 --tournaments 300`: self-play random local search over `CONFIG.tuning`
 - `npx tsc --noEmit -p .`: type-check
 - Python lab: `cd holdem && python match.py range equity 2000`
@@ -85,7 +89,8 @@ User reload steps: `chrome://extensions` â†’ reload â†» on PokerNow Bot
 ## State at handoff (updated Nov 1, 2026, second session)
 
 - All tests pass (`npm test`), `dist/` rebuilt with everything below.
-- Payouts: the user set `CONFIG.payouts` to 15/9/4/2/âˆ’2/âˆ’4/âˆ’9/âˆ’15 (treat as real).
+- Payouts: since v1.13.0 `CONFIG.payouts` = 15/7.5/5/3.75/-3.75/-5/-7.5/-15 (user adopted the reference bot's table,
+  SUMMARY_REFERENCE.md; before: 15/9/4/2/-2/-4/-9/-15). Sim points before/after v1.13.0 are on different scales.
 - **Turn timer is 10 s.** The bot nearly timed out: think time was capped at 12 s *plus* compute.
   Now `timing.minSeconds = 2`, `maxSeconds = 5` (user: 6 s still too slow) is a total budget from when the turn is seen (`remainingWait`
   in timing.ts subtracts compute time; `fitToBudget` compresses long thinks instead of clipping).
@@ -195,3 +200,106 @@ User reload steps: `chrome://extensions` â†’ reload â†» on PokerNow Bot
   fish -166, equity -667 (cartoon opponents -> only for comparing versions). ~260 hands/s. engine.ts now exports
   playHand/Seat. User's table: 10-max, 1/2 fixed, avg stack 200, no rake, mix of bots/weak/strong.
   Next: step 4 screen action recorder (live profiles), then deep preflop.
+- Nov 2: pushed to https://github.com/lnguyen258/pokerbot-pokernow (branch main), repo root = Quant/pokerbot.
+  Not pushed (.gitignore): node_modules, dist, tools/.build*, __pycache__, poker_now_log_*.csv (real players' names),
+  autoplay-helper/ + zip (user's edit enables it on PokerNow; declined to publish). pokernow-extension's old upstream
+  .git (EsawAdhana, 1 commit, none of ours) moved to Quant/pokernow-bot-upstream.git as a backup.
+- v1.8.1 (Nov 2): user asked for "thinking time as a strategy" back on preflop. Removed the v1.1.1 flat preflop
+  timing: preflop now uses the same strength-based acting-out as postflop (still squeezed into the 2-5 s budget).
+- v1.9.0 (Nov 2): exact bet sizes. Raises TYPE the amount ("raise to" = our street total) into the first text/number
+  input of .raise-controller-form (native value setter + input/change events), verify, submit; preset button is the
+  backup. Action.amount; src/ai/sizing.ts raiseTo()/raiseLimits(). Preflop opens 3 bb cash / 2.5 bb tourney (+1 bb per
+  limper), 3-bets 3x IP / 3.5x OOP (+1x per caller, all-in if 40%+ of stack); knobs openSizeBB, openSizeCashBB,
+  threeBetSize (also in tune.ts SPACE). Postflop bets 1/3, 1/2, 3/4, pot; raises 1/2 or pot of pot-after-call.
+  Trigger: user lost with JJ (one pair) betting pot UTG into QQ. Tuned knobs were evolved with old sizes -> re-tune.
+  Bet-box selector UNVERIFIED on the live site: check "[raise] typed N" in the console.
+- v1.9.1 (Nov 2): updating mid-game. background.js re-injects main.js into open table tabs on install/update; the new
+  copy fires "pokerbot-takeover" on document and older copies stop; a copy whose chrome.runtime.id is gone stops too.
+  Auto-start (botEnabled + autoStart) restarts the new copy. Copies from <= 1.9.0 lack the takeover listener: reload
+  the page once after installing 1.9.1.
+- v1.10.0 (Nov 2): extension lifecycle (pokernow-extension/PLAN.md, Part 1 of REFORM.md). Popup sometimes didn't
+  open: background.js onClicked/setPopup('') could remove it; popup.js was loaded twice; alert() closed the popup.
+  All removed. Popup = status at top (version, "Not a PokerNow tab", "Bot not loaded: F5"), Start/Kill only on click.
+  Auto-start: always on for /games/<id> pages (watched every 1 s, SPA navigation), off only after Kill (page-life
+  flag `offReason`, cleared by Start or reload). autopilot.ts, botEnabled and the checkbox deleted. One bot per game:
+  newest bot writes storage `activeBot {game,id}`, older tabs on that game stop (offReason "other-tab").
+  Manifest icon paths fixed to Icons/. Strategy roadmap: pokernow-extension/REFORM.md (Parts 2-9 by table size).
+- v1.10.1 (Nov 2): popup always said "Bot not loaded": auto-start ran at script load, getBigBlindValue() threw
+  before the table was drawn, and the script died before registering onMessage. Listener now registered before
+  auto-start; auto-start is deferred and wrapped in try/catch (retries every 1 s).
+- REFORM Part 2 (no version, no dist change): tablePhase()/phaseTag() in tableView.ts; decide.ts logs "[full 7p]";
+  sim engine onResult hook -> run.ts bb/100 by phase, --save; tools/smoke.js; test.js `todo(part, ...)` targets.
+  Baseline tools/sim-results/baseline-v1.10.json (smart +6.6, 92% top 4).
+- v1.11.0 (Nov 2): REFORM Part 3, src/ai/phaseStyle.ts. Full (6-8) / conservative (5): openFactor (cut by seats
+  behind, button gets 1/3 of the cut), callExtra, `respected` ranges (widen(range, respect)), playsWell() for calls
+  vs raises, no A2s-A5s 3-bet bluffs. Postflop: postflopRanges looseness/bluffShare/value x respect; a raise there
+  = board.ts twoPairPlus only, floor 0.005 instead of 0.03 (floor dominated: 15 combos vs hundreds); no bets/raises
+  with air (isAir: made < 0.4, outs < 8) at full/5 tables or into 2+ opponents (solver skipped then); one-pair guard
+  vs a raise: no raise/all-in if > 15 BB, guardRealise 0.7, temperature x0.25. Knobs fullOpen/CallExtra/Respect,
+  cons*, guardRealise, phaseRules (0 = v1.10 play; sim bot "oldsmart"). Sim: points tie (+6.7/+6.8 mixed,
+  +5.8/+5.5 tough), top 4 93/91% and 87/82%. Loses chips at 5 players vs fish (+50 vs +111 bb/100): tune in Part 9.
+- v1.11.1 (Nov 2): user saw A2 go all-in preflop. Bug: the A2s-A5s 3-bet bluff went through threeBet(), which
+  turns 40%+-of-stack raises into all-in, so at 8-15 BB a 'bluff' shoved after the re-shove EV check had said no.
+  Bluff now skipped when it would be all-in (test added). Still by design: heads-up BB re-shoves A2 vs a button
+  open at <= 20-25 BB (re-shove EV vs an 80% opening range).
+- v1.12.0 (Nov 2): user lost deepest stack with A9o re-shove vs HJ 2 BB raise (77) and ATo open-shove (BTN AK).
+  Causes: (1) push/fold uses EFFECTIVE stack, so the deepest player at 22 BB shoved as if 15 BB; (2) allInAnalysis
+  callers only called above their ICM-required equity, so short stacks "called 2-3%" -> shoves looked free.
+  Fixes: population.allInCallFloor 0.06 (callers always call with top 6%, pushFold.ts); phaseStyle.limitShoves at
+  5+ players: preflop all-in (push/fold, re-shove, 3-bet that would be all-in, 4-bet) only if own stack <=
+  tuning.shoveMaxBB (10) or QQ+/AK. Sim vs v1.11.1 (bot "prev"): +6.9/+6.8 mixed, +6.0/+6.0 tough, top 4 95/93,
+  88/87. Tests for both user hands. Known: shortest stack (8 BB) folds ATo in CO at 7 players (ICM, pre-existing).
+- v1.12.1 (Nov 2): user: "plays really risky at 8 players", all-in on a K-7-2 three-club flop holding one club,
+  called by a made flush. Part 3 rules only blocked air bets and one-pair raises; the sizing grid offered all-in
+  whenever stack <= 2.5 pots and overbets to 150%. New `careful` mode (phaseStyle.limitShoves, start-of-hand stack
+  > shoveMaxBB, knob postflopCareful): no option (bet/raise/call) putting in 40%+ of the stack unless strongMade()
+  (two pair+ with a hole card; flush+ on a 3-suited board), calls allowed at 55%+ equity; bets capped at fullMaxBet
+  0.75 pot; river solver skipped when not strong. Audit (tough table, 300 tournaments): all-ins without a strong
+  hand 87 -> 0, overbets 330 -> 3. Tests for the user's flop. Sim bot `vtwelve` = postflopCareful 0.
+  Sim vs vtwelve, 1,500 each: points -0.3 (+6.7/+7.0 mixed, +6.0/+6.2 tough, ~1 CI), top 4 better (96/95, 91/88),
+  wins lower (20/23, 19/23). Trade-off shipped at the user's request (conservative); retune in Part 9.
+- v1.12.2 (Nov 2): user: bot FOLDED the nut straight to a river all-in. Cause: riverSolver averageStrategy() returned
+  1/n when our real combo had 0 weight in our modelled range (heroWeights from SELF_PROFILE, e.g. 98o after a BTN
+  raise): avg is reach-weighted, regrets are not. Old since the solver was added; also made river value bets coin
+  flips. Fix: fall back to regret-matching for that combo; plus postflopBrain safety net: solver fold vs a bet with
+  riverEquity() >= 0.9 of their weighted range -> call. Tests: nut straight never folds at 8/4/2 players.
+- v1.12.3 (Nov 2): user: bot barrels bigger with no pair into a UTG check-caller (88). Causes: postflopRanges
+  check = drop 60% of top-20% hands (checks read as weakness); evOfRaise assumed callers re-fold each street.
+  Fixes (knob checkCallRules, sim bot vtwelvetwo = off): check drop x (aggression/0.35, min 0.3) x 0.5 if checking
+  to the preflop raiser x 0.5 after calling a postflop bet; sticky looseness x (1 + 0.3 x their postflop calls);
+  noBarrel: no own pair (noOwnPair) and outs < 8 vs someone who called 1 (5+ players) / 2 (fewer) postflop bets ->
+  no bet/raise, solver skipped. NOTE: user had SHARK MODE on during the risky v1.12.x sessions (bluffBelief 1,
+  bigBetRange 0.954 = calls lighter); advise normal mode for their beginner games.
+- v1.12.4 (Nov 2): (a) kickers: user asked if it knows top pair can be outkicked. Equity did fall with the kicker,
+  but vs a typical check-raise all-in on K72 even K3 called (46%): theory bluffShare GROWS with size and FLOOR 0.03
+  dominated. bigBetRule: bluffShare x belief^2 (bets >= 3/4 pot) / belief^3 (raises, all-ins), floor x belief^2 for
+  big raises. Now AK/KQ/KT call, K5/K3/QQ fold; vs maniac all call. (b) user saw a big bet with king high at 4 players:
+  airRule: nothing (noOwnPair, outs < 8) and not heads-up -> bets <= airMaxBet 0.5 pot, no raise, no all-in.
+  Sim bot vtwelvethree = both off. Tests [kicker] and [air]. Sim vs v1.12.3: points equal (+6.8/+7.0, +6.2/+6.2),
+  wins lower (22/24, 19/23).
+- v1.13.0 (Nov 3): from SUMMARY_REFERENCE.md. payouts -> 15/7.5/5/3.75/-3.75/-5/-7.5/-15. positionRules: stealBonus
+  0.25 (open x1.25 when unopened with <= 2 behind = BTN/SB; CO too at <= 4 players), realiseIP 1.05 (in position
+  before the river). Opening chart 8p: UTG 7%, CO 15%, BTN 30% (was 24%). Sim vs v1.12.4 (bot vtwelvefour) under
+  new payouts: +7.4/+7.2 mixed, +6.7/+6.2 tough, wins 24/22, 24/20. Popup: Shark-mode warning banner; decision
+  history (src/history.ts, storage recentDecisions, last 15, Copy button; smartBrain.lastDecision). User asked to
+  copy the reference bot's auto-join lobby script: declined again (public ranked lobby), not built.
+- v1.14.0 (Nov 3): LEARNING PIPELINE (pokernow-extension/docs/LEARNING_PIPELINE.md). src/table/recorder.ts
+  (HandRecorder: pure, fed Snapshots; new hand = dealer moved / board shrank / new hole cards; a bet counts only if
+  the stack dropped (pot-sweep animation) and all-in players can't act; checks inferred at street end; clean =
+  chips conserved + every loser lost exactly what they put in), tableSnapshot.ts (DOM, never throws),
+  gameRecords.ts (storage gameRecords, 50 games x 600 hands, unlimitedStorage permission). main.ts recordTick:
+  MutationObserver (150 ms throttle) + 1 s tick, game pages, bot on or off; clean hands -> addHand(toHandLog)
+  -> opponent profiles (ids screen:<name>, same as the live screen reader, so profiles finally work live);
+  decisions attached to the hand. Popup: Recorded games summary, Download games (JSON), Clear (click twice).
+  tools/review.js (`npm run review [-- file]`, default newest ~/Downloads/pokerbot-games*.json) ->
+  tools/reviews/review-<date>.md: by seat, by table size, biggest losses, our all-ins, showdowns, opponents.
+  Tests: [recorder] x6 incl. fast multi-action snapshots and all-in bets left on screen.
+- v1.15.0 (Nov 3): user: "too risky at 4 left, finishes 4th every time; players here play good hands 4-handed".
+  shortTight: phases normal (4) and creative (3) get the full-table rule set (respect 0.85 / 0.9, open 0.9 / 0.93,
+  callExtra 0.02 / 0.015, no pure bluffs, playable calls, one-pair guard, careful postflop, preflop all-in only
+  <= shortShoveMaxBB 15 or QQ+/AK; PhaseStyle.shoveMaxBB per phase), no extra CO steal at 4, all-in call floor
+  x1.5 at 3-4 players (pushFold). Heads-up unchanged. Sim vs v1.14.0 (bot vfourteen): points +7.3/+7.2 mixed,
+  +6.2/+6.5 tough, +5.4/+5.5 nits (all ~noise); avg place 2.51/2.65 mixed; wins DOWN 19/24, 18/23, 22/23;
+  bb/100 at 4 players +21 vs +71 (mixed). Shipped at user request; sim opponents are looser than the user's.
+  v1.14.1 was the USER's own edit (kept): HandRecorder.attachDecision() + pending list, so a decision made on a new
+  hand before the recorder saw it start joins that hand (matched by our cards), not the previous one.

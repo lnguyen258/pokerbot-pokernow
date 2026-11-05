@@ -84,6 +84,32 @@ first to act at a full table, 30% three from the button, 45% on the button, 80% 
 Then the ICM adjustment above. Example from the tests, 4 players left, 40 BB deep:
 K7o on the button → raise; K2o first to act → fold; K2o on the button → just misses.
 
+### 4b. Style by players left (v1.11.0)
+
+([src/ai/phaseStyle.ts](pokernow-extension/src/ai/phaseStyle.ts), plan in
+[REFORM.md](pokernow-extension/REFORM.md)). Every decision line starts with the phase, e.g. `[full 7p]`.
+
+- **6-8 players (full) and 5 players:** tight and careful.
+  - Before the flop: opens fewer hands (cut most in early seats, least on the button), needs more
+    equity to call a raise, and calls raises only with pairs, suited hands or two cards T+
+    (plus any ace in the big blind). No 3-bet bluffs.
+  - After the flop: an opponent who calls or bets is read as stronger. A raise is read as two pair
+    or better unless that player is known to raise a lot. No bluffing with nothing. With one pair
+    against a raise: never re-raise or go all-in (unless 15 BB or less), usually fold.
+  - **No all-in before the flop at 5+ players** (v1.12.0) unless the bot has 10 BB or less, or holds
+    QQ+ / AK. It raises normally, calls or folds instead. Calling someone else's all-in is still allowed.
+- **All tables:** the all-in math assumes opponents always call with their best hands (77+, AJs+, AQ+, AK),
+  whatever their stack. Before, it assumed short stacks under tournament pressure almost never call
+  ("BTN calls 3%"), so it shoved too light: A9 into a HJ raiser's 77, AT into the button's AK.
+- **Position (v1.13.0):** opens wider from the button and small blind when nobody is in (and from the
+  cutoff at 4 players or fewer): at 8 players UTG 7%, CO 15%, BTN 30%. In position it counts a little more
+  than its raw equity after the flop, since it acts last on every street.
+- **4 and 3 players (v1.15.0):** tight as well, since players here keep playing good hands: same rules
+  as above, but all-in before the flop is allowed up to 15 BB (stacks are shorter by then).
+- **Heads-up:** unchanged (Part 7 of REFORM.md).
+- Simulator, 1,500 Sit & Gos each, new vs old at the same tables: same points
+  (+6.7 vs +6.8 mixed table, +5.8 vs +5.5 tougher table) and more top-4 finishes (93% vs 91%, 87% vs 82%).
+
 ### 5. Reading opponents' ranges
 
 Each opponent's range is narrowed by what they did:
@@ -289,16 +315,32 @@ while hu	mans took a median of 2–4s and up to 27s on hard spots. Now ([timing.
   near 2 s, a long tank near 5 s, and they still vary (lots of thinks lasting exactly the cap
   would be a tell). Earlier caps of 12 s, then 6 s, were too slow at the table.
 
-### 9. Autopilot: auto-start
+### 9. Auto-start
 
-([src/autopilot.ts](pokernow-extension/src/autopilot.ts), settings in the popup)
+([src/main.ts](pokernow-extension/src/main.ts))
 
-- **Auto-start** (on by default): if the bot was on, it turns itself back on whenever a
-  PokerNow game page opens or reloads. Kill Bot turns it off for good.
+- The bot starts by itself on every PokerNow game page. **Kill Bot** keeps it off on that
+  page until you press Start or reload the page; a reload always starts a fresh bot.
+- Only one bot plays a game: if the same game is open in two tabs, the newest tab plays.
+- Clicking the extension icon only shows the status.
 - You register and take your seat yourself (auto-seat was removed in v1.7.0; the popup's
   name box went with it, since the bot finds its own seat on screen by `.you-player`).
 - **Keep the PokerNow tab visible** (e.g. in its own window). Chrome slows down timers in
   hidden tabs, sometimes to once a minute, and the bot would miss its turns.
+
+### 9b. Learning from every game (v1.14.0)
+
+([docs/LEARNING_PIPELINE.md](pokernow-extension/docs/LEARNING_PIPELINE.md))
+
+1. **Record:** on game pages the extension writes down every hand as it's played, from the screen: blinds,
+   folds, calls, bets, raises, checks, the board, cards shown at showdown, stacks before and after, and the
+   bot's own decisions with its reasons.
+2. **Learn:** hands where every chip adds up update the opponent profiles, so the bot spots fish, maniacs
+   and nits during the game and remembers them next time.
+3. **Export:** popup → Recorded games → **Download games** (a JSON file).
+4. **Review:** `npm run review` (newest download) writes a report in `tools/reviews/`: results by seat and
+   by table size, biggest losses, our all-ins, showdowns, and how each opponent plays. Send it to Claude
+   to turn bad hands into tests and fixes.
 
 ### 10. Sit & Go simulator and self-improvement
 
@@ -431,7 +473,8 @@ keep the verification step, and check changes against your real logs.
 ## Setup (after editing code)
 
 1. **Check your payouts** in [src/config.ts](pokernow-extension/src/config.ts)
-   (now 15/9/4/2/−2/−4/−9/−15).
+   (now 15/7.5/5/3.75/−3.75/−5/−7.5/−15 since v1.13.0, the reference bot's table: a bigger jump
+   between 4th and 5th, so surviving the bubble is worth more).
 2. `cd pokernow-extension`, then `npm test` (checks the math), then `npm run build`.
 3. In `chrome://extensions`, click reload ↻ on the extension, then reload the PokerNow tab.
 4. Click the extension icon and **type your PokerNow name exactly as shown at the table**.

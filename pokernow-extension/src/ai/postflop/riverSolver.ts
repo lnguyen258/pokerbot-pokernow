@@ -226,7 +226,13 @@ export function solveRiver(spot: RiverSpot, iterations = 400, target = 0.005): R
     function averageStrategy(node: Node & { kind: "act" }, i: number): number[] {
         const sums = node.avg.map(a => a[i]);
         const total = sums.reduce((x, y) => x + y, 0);
-        return total > 0 ? sums.map(s => s / total) : sums.map(() => 1 / sums.length);
+        if (total > 0) return sums.map(s => s / total);
+        // A hand we never "hold" in our modelled range (weight 0, e.g. 98o after a button raise) has no
+        // average strategy: the old 1/n default made the nut straight fold 50% to an all-in (v1.12.2 fix).
+        // Its regrets are still learned against the opponent's range: play by those instead.
+        const regrets = node.regret.map(a => Math.max(0, a[i]));
+        const rTotal = regrets.reduce((x, y) => x + y, 0);
+        return rTotal > 0 ? regrets.map(r => r / rTotal) : sums.map(() => 1 / sums.length);
     }
 
     /** Average strategy of a node for every hand at once. */

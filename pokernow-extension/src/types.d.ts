@@ -4,7 +4,10 @@ type RaiseAmount = "min" | "1/2_pot" | "pot" | "all_in";
 
 type Action = {
     type: ActionType,
+    /** Button preset. With `amount` set, it's only the backup if typing the amount fails. */
     raiseAmount?: RaiseAmount,
+    /** Exact raise: our total bet on this street afterwards ("raise to"), typed into the bet box. */
+    amount?: number,
 };
 
 type ChromeMessage = "start_bot" | "kill_bot" | "get_bot_status";

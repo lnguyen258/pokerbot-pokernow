@@ -19,6 +19,8 @@ import { allInAnalysis } from "./pushFold";
 import { bigBetShare, isCommitted, openShare, preflopRange, raiseStyle, seatsBehind } from "./playerRanges";
 import { cardToInt } from "../equity/evaluator";
 import { noteStrength } from "../../timing";
+import { describeRaise, raiseTo } from "../sizing";
+import { openFactor, phaseStyle, playsWell } from "../phaseStyle";
 
 export type Decision = { action: Action, reason: string };
 
@@ -57,6 +59,21 @@ function icmOpenFactor(view: TableView, behind: SeatView[]): { factor: number, n
     };
 }
 
+/**
+ * Opening size in big blinds. Fixed mode: base + 1 per limper. Any-size mode adds:
+ * more per limper (knob), more when fish who call too much are behind or limped
+ * (they call a bigger raise anyway), and more from the small blind (out of position).
+ * The size depends on the spot only, never on our cards, so it gives nothing away.
+ */
+function openSizeBB(view: TableView, me: SeatView, limpers: number, limperSeats: SeatView[],
+    behind: SeatView[], base: number): number {
+    const t = CONFIG.tuning;
+    if (t.preflopSizing < 2) return base + limpers;
+    const others = behind.concat(limperSeats);
+    const fish = others.length ? others.reduce((a, p) => a + fishScore(profileOf(p)), 0) / others.length : 0;
+    return base + t.openPerLimper * limpers + t.openFishBonus * fish + (me.position === "SB" ? t.openSbBonus : 0);
+}
+
 export function preflopDecide(view: TableView, state: State): Decision {
     currentView = view;
     const hand = classOf(cardToInt(state.hand[0]), cardToInt(state.hand[1]));
@@ -78,9 +95,19 @@ function decide(view: TableView, state: State, hand: number): Decision {
     const raises = preflop.filter(a => a.kind === "raise" || a.kind === "bet");
     const lastRaise = raises[raises.length - 1];
     const raiser = lastRaise ? view.players.find(p => p.id === lastRaise.id) : undefined;
+    const style = phaseStyle(view);
     const rangeOf = (p: SeatView) => preflopRange(view, p, profileOf(p));
+    // Full / 5-handed tables: an opponent who raised or called is assumed stronger.
+    const respected = (p: SeatView) => style.respect < 1 ? widen(rangeOf(p), style.respect) : rangeOf(p);
 
     const tag = `${handName} in ${me.position}, ${effBB.toFixed(1)} BB effective`;
+
+    // 5+ players: no all-in before the flop unless we're short (shoveMaxBB or less) or hold
+    // QQ+ / AK. Calling someone else's all-in is decided separately (section 2).
+    const myBB = me.startStack / bb;
+    const premium = /^(AA|KK|QQ|AKs|AKo)$/.test(handName);
+    const shoveOK = !style.limitShoves || myBB <= style.shoveMaxBB || premium;
+    const noShoveNote = `no all-in at a ${style.phase} table with ${myBB.toFixed(0)} BB and ${handName}`;
 
     // ---- 2. Facing an all-in or a commitment-sized bet
     if (raiser && !raiser.isMe && (lastRaise!.allIn || isCommitted(raiser, lastRaise!.amount) || toCall >= me.stack)) {
@@ -107,7 +134,7 @@ function decide(view: TableView, state: State, hand: number): Decision {
     }
 
     // ---- 1. Short stack, nobody has raised: all-in or fold
-    if (!raises.length && effBB <= CONFIG.pushFoldDepthBB) {
+    if (!raises.length && effBB <= CONFIG.pushFoldDepthBB && (!style.limitShoves || myBB <= style.shoveMaxBB)) {
         // Players behind act first; anyone who limped in front of us gets to act again after.
         const limpers = view.players.filter(p => !p.isMe && !p.folded && !behind.includes(p) &&
             p.actions.some(a => a.kind === "call"));
@@ -137,14 +164,32 @@ function decide(view: TableView, state: State, hand: number): Decision {
         const { factor, note: icmNote } = icmOpenFactor(view, behind);
         const note = fish >= 0.2 ? `Target the fish: limper${limpers > 1 ? "s are" : " is"} loose-passive ` +
             `(fish score ${fish.toFixed(2)}), isolating x${limpFactor.toFixed(2)}. ${icmNote}` : icmNote;
-        const share = Math.min(1, base * factor * CONFIG.tuning.openScale);
+        // Steals (v1.13.0): nobody in yet and only the blinds (or fewer) behind: open wider from the
+        // button and small blind; at 4 players or fewer also from the cutoff (3 behind).
+        const behindN = seatsBehind(view, me);
+        const stealSeat = CONFIG.tuning.positionRules && !limpers && view.players.length > 2 &&
+            (behindN <= 2 || (behindN === 3 && view.players.length <= 4 && !CONFIG.tuning.shortTight));
+        const steal = stealSeat ? 1 + CONFIG.tuning.stealBonus : 1;
+        const share = Math.min(1, base * factor * CONFIG.tuning.openScale *
+            openFactor(style, behindN, view.players.length) * steal);
         const rank = percentile(hand);
-        if (rank <= share)
+        // v1.15.8: 5+ players with 10-15 BB (too deep to shove there, too short for a normal
+        // open): raise to at most a quarter of the stack. Isolation raises of 35-45% of the stack
+        // got 2-3 callers and busted / crippled the bot (T9o, QTs), with no fold equity left.
+        const gap = style.limitShoves && effBB <= CONFIG.pushFoldDepthBB;
+        const gapCap = (to: number) => gap ? Math.max(2 * bb, Math.min(to, 0.25 * me.startStack)) : to;
+        if (rank <= share) {
+            // Open to 2.5-3 bb, plus 1 bb for every limper (they make the pot bigger).
+            const openBB = CONFIG.gameType === "cash" ? CONFIG.tuning.openSizeCashBB : CONFIG.tuning.openSizeBB;
+            const action: Action = CONFIG.tuning.preflopSizing === 0
+                ? { type: "raise", raiseAmount: limpers ? "pot" : "min" }          // old button sizes
+                : raiseTo(view, gapCap(openSizeBB(view, me, limpers, limperSeats, behind, openBB) * bb));
             return {
-                action: { type: "raise", raiseAmount: limpers ? "pot" : "min" },
-                reason: `${tag}. Hand is top ${(rank * 100).toFixed(0)}%, opening top ${(share * 100).toFixed(0)}% ` +
-                    `from here${limpers ? ` (isolating ${limpers} limper${limpers > 1 ? "s" : ""})` : ""}. ${note} -> raise`,
+                action,
+                reason: `${tag}. Hand is top ${(rank * 100).toFixed(0)}%, opening top ${(share * 100).toFixed(0)}%${stealSeat ? " (steal seat)" : ""} ` +
+                    `from here${limpers ? ` (isolating ${limpers} limper${limpers > 1 ? "s" : ""})` : ""}. ${note} -> raise ${describeRaise(action, bb)}`,
             };
+        }
         // Completing the small blind: cheap, but out of position in a multiway pot, so
         // only hands just below the opening range (not K6o / Q7o "because it's cheap").
         const completeSb = me.position === "SB" && toCall > 0 && toCall <= bb / 2 + 1e-9 &&
@@ -158,7 +203,7 @@ function decide(view: TableView, state: State, hand: number): Decision {
 
     // ---- 4. Facing a normal raise (or re-raise)
     const villain = raiser!;
-    const theirRange = rangeOf(villain);
+    const theirRange = respected(villain);
     const eq = equityVsRange(hand, theirRange);
     const pot = view.pot;
     const potOdds = toCall / (pot + toCall);
@@ -172,7 +217,7 @@ function decide(view: TableView, state: State, hand: number): Decision {
     const coldCallers = preflop.filter(a => a.kind === "call" && preflop.indexOf(a) > preflop.indexOf(lastRaise!)).length;
     const eqMulti = eq - 0.06 * coldCallers;
     const needToCall = potOdds + (inPosition ? CONFIG.tuning.callPenaltyIP : CONFIG.tuning.callPenaltyOOP) +
-        0.5 * Math.max(0, myPressure);
+        0.5 * Math.max(0, myPressure) + style.callExtra;
     const info = `${tag}. ${villain.name} raised from ${villain.position} (${describe(villain.id, villain.name)}), ` +
         `range ~${(rangeSize(theirRange) * 100).toFixed(0)}%. My equity vs it ${(eq * 100).toFixed(1)}%` +
         (coldCallers ? `, ${(eqMulti * 100).toFixed(1)}% with ${coldCallers} caller${coldCallers > 1 ? "s" : ""} in` : "");
@@ -185,19 +230,45 @@ function decide(view: TableView, state: State, hand: number): Decision {
         // the raise (beginners especially) rarely fold, so multiway it needs real equity too.
         // Gains are in points (tournament) or chips (cash: at least 0.1 big blind).
         const minGain = CONFIG.gameType === "cash" ? 0.1 * view.bb : RESHOVE_MARGIN * spread(CONFIG.payouts);
-        if (gain > minGain && (effBB <= 20 || eq >= 0.5) && (coldCallers === 0 || eq >= 0.45))
+        if (shoveOK && gain > minGain && (effBB <= 20 || eq >= 0.5) && (coldCallers === 0 || eq >= 0.45))
             return {
                 action: { type: "raise", raiseAmount: "all_in" },
                 reason: `${info}. Re-shove gains ${gain.toFixed(2)} pts (they fold ${(analysis.pAllFold * 100).toFixed(0)}%) -> ALL-IN`,
             };
     }
-    if (raises.length === 1 && eq >= CONFIG.tuning.threeBetEquity)
-        return { action: { type: "raise", raiseAmount: "pot" }, reason: `${info} -> 3-bet for value` };
-    if (raises.length >= 2 && eq >= 0.55)
+    // 3-bet to 3x their raise in position (a bit more out of position), plus 1x per caller.
+    // If that's 40%+ of our stack, just go all-in: we'd never fold after putting that much in.
+    const threeBet = (): Action => {
+        if (CONFIG.tuning.preflopSizing === 0) return { type: "raise", raiseAmount: "pot" };   // old button size
+        const t = CONFIG.tuning, any = t.preflopSizing >= 2;
+        // Any-size mode: bigger out of position and against fish who call too much.
+        const mult = t.threeBetSize + (inPosition ? 0 : any ? t.threeBetOopExtra : 0.5) + coldCallers +
+            (any ? t.threeBetFishBonus * fishScore(profileOf(villain)) : 0);
+        const to = lastRaise!.amount * mult;
+        return to >= 0.4 * (me.streetBet + me.stack) ? { type: "raise", raiseAmount: "all_in" } : raiseTo(view, to);
+    };
+    if (raises.length === 1 && eq >= CONFIG.tuning.threeBetEquity) {
+        const action = threeBet();
+        // A 3-bet that would be all-in follows the same 5+ player rule (else call or fold below).
+        if (action.raiseAmount !== "all_in" || shoveOK)
+            return { action, reason: `${info} -> 3-bet for value ${describeRaise(action, bb)}` };
+    }
+    if (raises.length >= 2 && eq >= 0.55 && shoveOK)
         return { action: { type: "raise", raiseAmount: "all_in" }, reason: `${info} -> 4-bet all-in` };
-    if (raises.length === 1 && inPosition && /^A[2-5]s$/.test(handName) && Math.random() < 0.3)
-        return { action: { type: "raise", raiseAmount: "pot" }, reason: `${info} -> 3-bet bluff (ace blocker, in position)` };
+    // A bluff 3-bet must stay a small raise we can fold. When the stack is short enough that it
+    // would be all-in, skip it: the all-in check above already decided shoving isn't worth it.
+    if (style.bluffs && raises.length === 1 && inPosition && /^A[2-5]s$/.test(handName) && Math.random() < 0.3) {
+        const action = threeBet();
+        if (action.raiseAmount !== "all_in")
+            return { action, reason: `${info} -> 3-bet bluff (ace blocker, in position) ${describeRaise(action, bb)}` };
+    }
+    // Full / 5-handed: call raises only with hands that play well after the flop.
+    const playable = !style.playableCalls || playsWell(handName, me.position === "BB");
+    if (eqMulti >= needToCall && !playable)
+        return { action: { type: "check_or_fold" }, reason: `${info}, need ${(needToCall * 100).toFixed(1)}%, ` +
+            `but ${handName} plays badly after the flop at a ${style.phase} table -> fold` };
+    const shoveNote = shoveOK ? "" : ` (${noShoveNote})`;
     if (eqMulti >= needToCall)
-        return { action: { type: "call" }, reason: `${info}, need ${(needToCall * 100).toFixed(1)}% -> call` };
-    return { action: { type: "check_or_fold" }, reason: `${info}, need ${(needToCall * 100).toFixed(1)}% -> fold` };
+        return { action: { type: "call" }, reason: `${info}, need ${(needToCall * 100).toFixed(1)}%${shoveNote} -> call` };
+    return { action: { type: "check_or_fold" }, reason: `${info}, need ${(needToCall * 100).toFixed(1)}%${shoveNote} -> fold` };
 }

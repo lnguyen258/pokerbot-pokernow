@@ -31,7 +31,11 @@ export function readTable(state: State): TableView | null {
     return view;
 }
 
+/** The smart brain's last reason line (for the popup's decision history). */
+export let lastDecision = "";
+
 export async function smartAction(state: State): Promise<Action> {
+    lastDecision = "";
     const mode = await loadMode();
     await loadStats();
     const view = readTable(state);
@@ -42,5 +46,8 @@ export async function smartAction(state: State): Promise<Action> {
     console.log(`[table] (${CONFIG.gameType}, ${mode} mode): ` +
         view.players.map(p => `${p.isMe ? "*" : ""}${p.name} ${p.position} ${p.stack}${p.folded ? " (folded)" : ""}`).join(" | "));
 
-    return decideWithView(view, state);
+    return decideWithView(view, state, m => {
+        console.log(m);
+        lastDecision = `(${mode} mode) ${m}`;
+    });
 }

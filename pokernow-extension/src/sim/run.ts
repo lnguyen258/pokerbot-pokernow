@@ -10,13 +10,32 @@
 import { CONFIG } from "../config";
 import { parseHand } from "../table/logReader";
 import { addHand, resetStats } from "../table/stats";
-import { playTournament, SimBot } from "./engine";
+import { HandResult, playTournament, SimBot } from "./engine";
+import { TablePhase, phaseForPlayers } from "../table/tableView";
+import * as fs from "fs";
+import * as path from "path";
 import { BOT_TYPES } from "./bots";
 
 export type Score = { points: number[], places: number[] };
 
+/** Chips won or lost (in big blinds) per bot type and table phase, and how many hands were dealt. */
+export type PhaseStats = Map<string, Map<TablePhase, { bb: number, hands: number }>>;
+export const PHASES: TablePhase[] = ["full", "conservative", "normal", "creative", "headsUp"];
+
+export function recordPhases(stats: PhaseStats, r: HandResult, typeOf: (label: string) => string) {
+    const phase = phaseForPlayers(r.players);
+    for (const d of r.deltas) {
+        const byPhase = stats.get(typeOf(d.label)) ?? new Map();
+        const cell = byPhase.get(phase) ?? { bb: 0, hands: 0 };
+        cell.bb += d.chips / r.bb;
+        cell.hands++;
+        byPhase.set(phase, cell);
+        stats.set(typeOf(d.label), byPhase);
+    }
+}
+
 export function runTournaments(makeBots: () => SimBot[], count: number,
-    typeOf: (label: string) => string, progress = true, memory = false): Map<string, Score> {
+    typeOf: (label: string) => string, progress = true, memory = false, phases?: PhaseStats): Map<string, Score> {
     const scores = new Map<string, Score>();
     const started = Date.now();
     for (let t = 0; t < count; t++) {
@@ -26,7 +45,8 @@ export function runTournaments(makeBots: () => SimBot[], count: number,
             const j = Math.floor(Math.random() * (i + 1));
             [bots[i], bots[j]] = [bots[j], bots[i]];
         }
-        const result = playTournament(bots, undefined, log => addHand(parseHand(log)));
+        const result = playTournament(bots, undefined, log => addHand(parseHand(log)),
+            phases ? r => recordPhases(phases, r, typeOf) : undefined);
         for (const [label, place] of result.places) {
             const s = scores.get(typeOf(label)) ?? { points: [], places: [] };
             s.points.push(CONFIG.payouts[place - 1] ?? 0);
@@ -62,6 +82,22 @@ export function printTable(scores: Map<string, Score>) {
             `${r.avgPlace.toFixed(2).padStart(6)}   ${(r.top4 * 100).toFixed(0).padStart(4)}%   ${(r.wins * 100).toFixed(0).padStart(4)}%   (${r.n})`);
 }
 
+/** Big blinds won per 100 hands dealt, by table phase (where each bot wins and loses chips). */
+export function printPhases(stats: PhaseStats, order: string[]) {
+    console.log("\n  bb won per 100 hands dealt, by players left (hands dealt in brackets)");
+    console.log("  bot          " + ["full 6-8", "conserv. 5", "normal 4", "creative 3", "heads-up 2"].map(h => h.padStart(16)).join(""));
+    for (const type of order) {
+        const byPhase = stats.get(type);
+        if (!byPhase) continue;
+        console.log(`  ${type.padEnd(12)} ` + PHASES.map(ph => {
+            const c = byPhase.get(ph);
+            if (!c || !c.hands) return "-".padStart(16);
+            const v = 100 * c.bb / c.hands;
+            return `${(v >= 0 ? "+" : "") + v.toFixed(0)} (${c.hands})`.padStart(16);
+        }).join(""));
+    }
+}
+
 function arg(name: string, fallback: string) {
     const i = process.argv.indexOf(`--${name}`);
     return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
@@ -74,9 +110,28 @@ if (require.main === module) {
     const seatTypes = arg("seats", "smart,smart,equity,equity,station,maniac,nit,random").split(",");
     out(`Playing ${count} Sit & Gos, seats: ${seatTypes.join(", ")}`);
     out(`Payouts 1st..8th: ${CONFIG.payouts.join(" / ")}`);
+    const phases: PhaseStats = new Map();
     const scores = runTournaments(
         () => seatTypes.map((t, i) => BOT_TYPES[t](`${t}${i + 1}`)),
-        count, label => label.replace(/\d+$/, ""), true, process.argv.includes("--memory"));
+        count, label => label.replace(/\d+$/, ""), true, process.argv.includes("--memory"), phases);
     console.log = out as typeof console.log;
     printTable(scores);
+    const order = [...scores.entries()].sort((a, b) => summarize(b[1]).mean - summarize(a[1]).mean).map(([t]) => t);
+    printPhases(phases, order);
+    // --save <name>: keep the numbers in tools/sim-results/<name>.json (baselines to compare against later).
+    const save = arg("save", "");
+    if (save) {
+        const file = path.join(__dirname, "../../sim-results", `${save}.json`);
+        fs.writeFileSync(file, JSON.stringify({
+            date: new Date().toISOString(), tournaments: count, seats: seatTypes, payouts: CONFIG.payouts,
+            bots: Object.fromEntries(order.map(t => [t, {
+                ...summarize(scores.get(t)!),
+                bbPer100ByPhase: Object.fromEntries(PHASES.map(ph => {
+                    const c = phases.get(t)?.get(ph);
+                    return [ph, c && c.hands ? { bbPer100: 100 * c.bb / c.hands, hands: c.hands } : null];
+                })),
+            }])),
+        }, null, 2));
+        out(`\n  saved ${file}`);
+    }
 }

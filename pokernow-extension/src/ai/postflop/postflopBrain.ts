@@ -1,7 +1,7 @@
 /**
  * Postflop decisions against each opponent's narrowed range.
  *
- * For every option (check, bet 1/2 pot, bet pot, all-in; or fold, call, raise):
+ * For every option (check, bet any size from 20% of the pot to an overbet, all-in; or fold, call, raise):
  *   - who folds? Each hand in their range continues only if it's worth it at
  *     that price: made hands by strength, DRAWS by their chance to hit vs the
  *     pot odds (postflopRanges.continueMembership). A bigger bet prices out
@@ -22,6 +22,8 @@ import { preflopRange } from "../preflop/playerRanges";
 import { continueMembership, drawShares, loosenessOf, postflopWeights } from "./postflopRanges";
 import { Profile, fishScore } from "../../table/stats";
 import { CONFIG } from "../../config";
+import { raiseTo } from "../sizing";
+import { isAir, noOwnPair, onePairOrWorse, phaseStyle, strongMade } from "../phaseStyle";
 
 type Sample = { combo: number, result: number };
 
@@ -96,9 +98,28 @@ function equityAgainst(samples: Sample[], membership?: number[]): number {
 /** Postflop acting order is SB, BB, then the rest; the last player left acts last. */
 function inPosition(view: TableView): boolean {
     const ps = view.players;
-    const order = ps.length === 2 ? [ps[1], ps[0]] : [...ps.slice(-2), ...ps.slice(0, -2)];
+    // After the flop the blinds act first (only the big blind when no small blind was posted).
+    const blind = (p: SeatView) => p.position === "SB" || p.position === "BB";
+    const order = ps.length === 2 ? [ps[1], ps[0]] : [...ps.filter(blind), ...ps.filter(p => !blind(p))];
     const live = order.filter(p => !p.folded);
     return live[live.length - 1]?.isMe ?? false;
+}
+
+/** River: share of the opponent's weighted range our hand beats (ties count half). */
+function riverEquity(hole: number[], board: number[], weights: number[]): number {
+    const mine = evaluate(hole.concat(board));
+    const used = new Set([...hole, ...board]);
+    let won = 0, total = 0;
+    for (let i = 0; i < N; i++) {
+        const w = weights[i];
+        if (!w) continue;
+        const [a, b] = COMBOS[i];
+        if (used.has(a) || used.has(b)) continue;
+        const theirs = evaluate([a, b, ...board]);
+        total += w;
+        won += w * (mine > theirs ? 1 : mine === theirs ? 0.5 : 0);
+    }
+    return total > 0 ? won / total : 0.5;
 }
 
 export type PostflopContext = {
@@ -144,7 +165,10 @@ function riverBySolver(view: TableView, state: State, villain: SeatView, villain
     const strategy = solution.strategyFor(comboIndex(hole[0], hole[1])).filter(s => s.prob > 0.005);
     let x = Math.random(), pick = strategy[strategy.length - 1];
     for (const s of strategy) { if (x < s.prob) { pick = s; break; } x -= s.prob; }
-    const action = SOLVER_ACTIONS[pick.action] ?? (pick.action.startsWith("bet") ? { type: "raise", raiseAmount: "pot" } as Action : { type: "call" } as Action);
+    // Solver bets are pot fractions ("bet 0.5"): type the exact amount.
+    const betFrac = /^bet ([\d.]+)$/.exec(pick.action);
+    const action = betFrac ? raiseTo(view, view.me.streetBet + parseFloat(betFrac[1]) * view.pot)
+        : SOLVER_ACTIONS[pick.action] ?? (pick.action.startsWith("bet") ? { type: "raise", raiseAmount: "pot" } as Action : { type: "call" } as Action);
     return {
         action,
         reason: `river, heads-up: solved ${solution.iterations} CFR+ iterations ` +
@@ -165,12 +189,56 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
     // bluff them at a "balanced" rate they never fold to and value bet too thin.
     // So against fish, the EV rules below play their actual habits.
     const fish = opps.length === 1 ? fishScore(ctx.profileOf(opps[0])) : 0;
+
+    // Table-phase rules (REFORM.md Part 3):
+    //  - no pure bluffs (nothing made, no real draw) at full / 5-handed tables, or into 2+ opponents
+    //  - no raise or all-in with one pair against a raise at those tables (unless short: 15 BB or less)
+    const style = phaseStyle(view);
+    const mine = comboIndex(hole[0], hole[1]);
+    // Bets each opponent has already called after the flop (a check-caller has a hand).
+    const callsOf = (p: SeatView) => view.actions.filter(a => a.id === p.id && a.street !== "preflop" && a.kind === "call").length;
+    const maxCalls = Math.max(0, ...opps.map(callsOf));
+    // No barrels with nothing (v1.12.3): no pair of our own and no real draw, against someone who
+    // already called after the flop (5+ players: one call; fewer players: two calls).
+    const nothing = noOwnPair(hole, board) && info.outs[mine] < 8;
+    const noBarrel = !!CONFIG.tuning.checkCallRules && nothing && maxCalls >= (style.limitShoves ? 1 : 2);
+    // Bluff gate (v1.15.2, real games: these opponents call or raise our bluffs): in a tournament,
+    // not heads-up, a bet with nothing only on the flop, in position, against one player.
+    const bluffGate = !!CONFIG.tuning.bluffGate && CONFIG.gameType === "tournament" && style.phase !== "headsUp";
+    const noAirBet = bluffGate && nothing && (!inPosition(view) || opps.length >= 2 || street !== "flop");
+    const noBluff = (isAir(info.made[mine], info.outs[mine]) && (!style.bluffs || opps.length >= 2)) || noBarrel || noAirBet;
+    // Bluffs stay small (v1.12.4): with nothing, bet at most airMaxBet x pot, never all-in, never raise.
+    // Heads-up is the exception (REFORM Part 7 decides heads-up pressure).
+    const airLimit = !!CONFIG.tuning.airRule && nothing && style.phase !== "headsUp";
+    const lastAggr = [...view.actions].reverse().find(a => a.street === street && (a.kind === "bet" || a.kind === "raise"));
+    const facingRaise = state.toCall > 0 && lastAggr?.kind === "raise" && lastAggr.id !== view.me.id;
+    const guard = style.stackOffGuard && facingRaise && onePairOrWorse(hole, board) &&
+        view.me.stack / Math.max(1, view.bb) > 15;
+    //  - (v1.12.1) no all-in and no bet, raise or call of 40%+ of the stack without a strong made hand
+    //    (two pair+, a flush+ on a three-suited board), and no overbets: bets up to fullMaxBet x pot.
+    //    Unless short (style.shoveMaxBB or less). Calls are allowed with 55%+ equity.
+    const strong = strongMade(hole, board);
+    // Short = at the START of the hand (like the preflop rule), not after the chips we put in this hand.
+    const careful = !!CONFIG.tuning.postflopCareful && style.limitShoves && view.me.startStack / Math.max(1, view.bb) > style.shoveMaxBB;
+    const ruleNote = (noBarrel ? `No barrel: no pair, no draw, and they already called ${maxCalls} bet${maxCalls > 1 ? "s" : ""}. `
+        : noAirBet ? `No bluff with nothing (only a flop bet, in position, vs one player). `
+        : noBluff ? `No bluff: nothing made${opps.length >= 2 ? ` into ${opps.length} players` : ` at a ${style.phase} table`}. `
+        : guard ? `One pair vs a raise at a ${style.phase} table: call or fold only. ` : "") +
+        (airLimit && !noBluff ? `Bluff with nothing: small bets only (up to ${Math.round(CONFIG.tuning.airMaxBet * 100)}% pot), no raise or all-in. ` : "") +
+        (careful ? `Careful (${style.phase} table): ${strong ? "strong hand, may commit" : "no all-in or big commitment"}, bets up to ${Math.round(CONFIG.tuning.fullMaxBet * 100)}% pot. ` : "");
+
     let exploitNote = "";
-    if (street === "river" && opps.length === 1 && CONFIG.tuning.riverSolver && fish >= CONFIG.tuning.exploitCutoff)
+    if (street === "river" && opps.length === 1 && CONFIG.tuning.riverSolver && (noBluff || guard || (careful && !strong)))
+        exploitNote = "Solver skipped (it may bluff or raise). ";
+    else if (street === "river" && opps.length === 1 && CONFIG.tuning.riverSolver && fish >= CONFIG.tuning.exploitCutoff)
         exploitNote = `Target the fish: ${opps[0].name} fish score ${fish.toFixed(2)}, exploiting instead of solving. `;
     else if (street === "river" && opps.length === 1 && CONFIG.tuning.riverSolver) {
         try {
-            const solved = riverBySolver(view, state, opps[0], weights[0], hole, board);
+            let solved = riverBySolver(view, state, opps[0], weights[0], hole, board);
+            // Safety net: never fold a river hand that beats nearly all of their range.
+            const riverEq = riverEquity(hole, board, weights[0]);
+            if (solved && solved.action.type === "check_or_fold" && state.toCall > 0 && riverEq >= 0.9)
+                solved = { action: { type: "call" }, reason: solved.reason + ` -> overridden: I beat ${Math.round(riverEq * 100)}% of their range, call` };
             if (solved) {
                 noteStrength(info.made[comboIndex(hole[0], hole[1])]);
                 return solved;
@@ -188,10 +256,14 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
     const toCall = Math.min(state.toCall, view.me.stack);
     const myStack = view.me.stack;
     const ip = inPosition(view);
-    const realise = street === "river" ? 1 : ip ? 1 : CONFIG.tuning.realiseOOP;
+    // One pair calling a full-table raise before the river: they keep betting on later streets,
+    // so we keep less of our equity (guardRealise), in position or not.
+    // In position we act last on every later street and realise MORE than our raw equity (v1.13.0, realiseIP).
+    const ipRealise = CONFIG.tuning.positionRules ? CONFIG.tuning.realiseIP : 1;
+    const realise = street === "river" ? 1 : Math.min(ip ? ipRealise : CONFIG.tuning.realiseOOP, guard ? CONFIG.tuning.guardRealise : 1);
     const river = street === "river";
 
-    type Option = { action: Action, ev: number, label: string };
+    type Option = { action: Action, ev: number, label: string, x?: number };   // x = chips we put in
     const options: Option[] = [];
 
     if (toCall === 0) options.push({ action: { type: "check_or_fold" }, ev: realise * eqAll * pot, label: "check" });
@@ -199,22 +271,19 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
         options.push({ action: { type: "check_or_fold" }, ev: 0, label: "fold" });
         let ev = (toCall >= myStack ? 1 : realise) * eqAll * (pot + toCall) - toCall;
         if (toCall >= 0.5 * myStack) ev -= ctx.callPressure * (pot + toCall);
-        options.push({ action: { type: "call" }, ev, label: "call" });
+        options.push({ action: { type: "call" }, ev, label: "call", x: toCall });
     }
 
-    const sizes: [number, RaiseAmount][] = [[0.5, "1/2_pot"], [1, "pot"]];
-    if (myStack <= 2.5 * (pot + toCall)) sizes.push([Infinity, "all_in"]);
-    if (toCall > 0) sizes.shift();                 // facing a bet: raise pot-size or all-in
-
-    for (const [frac, preset] of sizes) {
-        const x = Math.min(myStack, frac === Infinity ? myStack : toCall + frac * (pot + toCall));
-        if (x <= toCall) continue;
+    /** EV of putting in `x` more chips now (a bet, or a raise when facing one). */
+    const evOfRaise = (x: number): { ev: number, notes: string[] } => {
         const allIn = x >= myStack;
         let noneYet = 1, calledEv = 0;
         const notes: string[] = [];
         opps.forEach((p, k) => {
             const theirCall = Math.min(x - toCall, p.stack);       // what they must add to continue
-            let cont = continueMembership(weights[k], info, theirCall, pot + x, street, loosenessOf(ctx.profileOf(p)),
+            // Sticky: each bet they already called after the flop makes them fold less now.
+            const sticky = Math.min(1.8, loosenessOf(ctx.profileOf(p)) * (CONFIG.tuning.checkCallRules ? 1 + 0.3 * callsOf(p) : 1));
+            let cont = continueMembership(weights[k], info, theirCall, pot + x, street, sticky,
                 allIn || theirCall >= p.stack);
             // Already 40%+ of their stack in: they don't fold a decent hand or a draw.
             if (p.invested >= 0.4 * p.startStack)
@@ -236,7 +305,10 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
             const risk = Math.min(myStack, p.stack + theirCall);
             const eqVsRaise = pRaise > 0.001 ? equityAgainst(samples[k], raises) : 0;
             const raisedEv = Math.max(-x, eqVsRaise * (pot + 2 * risk) - risk);
-            calledEv += noneYet * (pCall * (r * eqCalled * (pot + x + theirCall) - x) + pRaise * raisedEv);
+            // Reverse implied odds: before the river, a called bet with a hand that's often behind
+            // grows a pot we'll keep paying into on later streets. Costs more the bigger the bet.
+            const later = river || allIn ? 0 : CONFIG.tuning.reverseImplied * (1 - eqCalled) * x;
+            calledEv += noneYet * (pCall * (r * eqCalled * (pot + x + theirCall) - x - later) + pRaise * raisedEv);
             noneYet *= 1 - pCall - pRaise;
             notes.push(`${p.name} folds ${Math.round((1 - pCall - pRaise) * 100)}%` +
                 (pRaise > 0.02 ? `, raises ${Math.round(pRaise * 100)}%` : "") +
@@ -245,15 +317,104 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
         });
         let ev = noneYet * pot + calledEv;
         if (x >= 0.5 * myStack) ev -= ctx.callPressure * (pot + 2 * x);
-        const name = preset === "all_in" ? "all-in" : `${toCall ? "raise" : "bet"} ${preset.replace("_", " ")}`;
-        options.push({ action: { type: "raise", raiseAmount: preset }, ev, label: `${name} [${notes.join("; ")}]` });
+        return { ev, notes };
+    };
+
+    // Sizes are shares of the pot after our call: bet 0.5 = half the pot; facing a bet,
+    // raise 0.5 = call, then add half the new pot (about 3x their bet).
+    const chipsFor = (frac: number) => toCall + frac * (pot + toCall);
+    const scored = new Map<number, { action: Action, ev: number, notes: string[] }>();   // by chips added
+    const score = (frac: number) => {
+        const sized = frac === Infinity ? { type: "raise", raiseAmount: "all_in" } as Action
+            : raiseTo(view, view.me.streetBet + chipsFor(frac));
+        const x = sized.amount !== undefined ? sized.amount - view.me.streetBet : myStack;
+        if (x <= toCall) return null;
+        let hit = scored.get(x);
+        if (!hit) { hit = { action: sized, ...evOfRaise(x) }; scored.set(x, hit); }
+        return { x, ...hit };
+    };
+    const label = (x: number, notes: string[]) => (x >= myStack ? "all-in"
+        : `${toCall ? "raise" : "bet"} ${Math.round((x - toCall) / (pot + toCall) * 100)}% pot, to ${x + view.me.streetBet}`) +
+        ` [${notes.join("; ")}]`;
+    const canShove = myStack <= 2.5 * (pot + toCall);
+
+    if (CONFIG.tuning.postflopSizing >= 2) {
+        // Any size: scan 20% of the pot up to an overbet, then zoom in around the best.
+        let top = careful ? CONFIG.tuning.fullMaxBet : Math.max(1, CONFIG.tuning.maxOverbet);
+        if (airLimit) top = Math.min(top, CONFIG.tuning.airMaxBet);
+        // v1.15.6: the careful rule below drops bets of 40%+ of the stack. Search only sizes under that,
+        // else the best size was dropped and no smaller bet was left (real game: 87% equity, checked).
+        if (careful && !strong) top = Math.min(top, (0.4 * myStack - toCall) / Math.max(1, pot + toCall) - 0.01);
+        const grid = (toCall > 0 ? [0.35, 0.5, 0.7, 1, 1.3] : [0.2, 0.33, 0.5, 0.66, 0.8, 1, 1.25, 1.5])
+            .filter(f => f <= top + 1e-9);
+        if (top >= 0.1 && !(grid[grid.length - 1] >= top)) grid.push(top);
+        if (grid.length) {
+        const evAt = (f: number) => score(f)?.ev ?? -Infinity;
+        let bi = 0;
+        grid.forEach((f, i) => { if (evAt(f) > evAt(grid[bi])) bi = i; });
+        // Golden-section search between the neighbours of the best grid point.
+        let lo = grid[Math.max(0, bi - 1)], hi = grid[Math.min(grid.length - 1, bi + 1)];
+        const g = 0.618;
+        for (let it = 0; it < 4 && hi - lo > 0.02; it++) {
+            const a = hi - g * (hi - lo), b = lo + g * (hi - lo);
+            if (evAt(a) >= evAt(b)) hi = b; else lo = a;
+        }
+        let bestFrac = grid[bi];
+        for (const f of [lo, hi, (lo + hi) / 2]) if (evAt(f) > evAt(bestFrac)) bestFrac = f;
+        // A little random spread so the exact size doesn't give our hand away.
+        const spread = CONFIG.tuning.sizeSpread * (2 * Math.random() - 1);
+        const pick = score(Math.min(top, bestFrac * (1 + spread))) ?? score(bestFrac);
+        if (pick && pick.x < myStack)
+            options.push({ action: pick.action, ev: pick.ev, label: label(pick.x, pick.notes), x: pick.x });
+        }
+        if (canShove) {
+            const shove = score(Infinity);
+            if (shove) options.push({ action: shove.action, ev: shove.ev, label: label(shove.x, shove.notes), x: shove.x });
+        }
+    }
+    else {
+        // Fixed sizes. Old: bet 1/2 or pot, raise pot. v1.9.0: bet 1/3, 1/2, 3/4, pot; raise 1/2 or pot.
+        const sizes: number[] = CONFIG.tuning.postflopSizing === 0 ? (toCall > 0 ? [1] : [0.5, 1])
+            : toCall > 0 ? [0.5, 1] : [1 / 3, 0.5, 0.75, 1];
+        if (canShove) sizes.push(Infinity);
+        const seen = new Set<number>();
+        for (const frac of sizes) {
+            const s = score(frac);
+            if (!s || seen.has(s.x)) continue;
+            seen.add(s.x);
+            options.push({ action: s.action, ev: s.ev, label: label(s.x, s.notes), x: s.x });
+        }
+    }
+
+    const commit = 0.4 * myStack;
+    // Weak hand into 2+ players (bluff gate): they rarely all fold, so check / call / fold only.
+    const weakMultiway = bluffGate && opps.length >= 2 && eqAll < CONFIG.tuning.weakMultiwayEq;
+    const allowed = (o: Option) => {
+        if ((noBluff || guard || weakMultiway) && o.action.type === "raise") return false;
+        if (airLimit && o.action.type === "raise" && (toCall > 0 || (o.x !== undefined && o.x >= myStack))) return false;
+        if (!careful || strong || o.x === undefined || o.x < commit) return true;
+        // Big calls need 55% equity, or (v1.15.5, user: "relax a little") a clear margin over the price.
+        const need = toCall / Math.max(1, pot + toCall);
+        return o.action.type === "call" && eqAll >= Math.min(0.55, need + CONFIG.tuning.carefulCallMargin);
+    };
+    if (options.some(o => !allowed(o))) {
+        const kept = options.filter(allowed);
+        options.length = 0;
+        options.push(...kept);
     }
 
     // Mostly the best EV; options within a few % of the pot get mixed.
     // Clearly worse options (more than 8% of the pot below the best) are never picked.
     const best = Math.max(...options.map(o => o.ev));
-    const scale = Math.max(1, pot) * CONFIG.tuning.postflopTemperature;
-    const probs = options.map(o => o.ev < best - 0.08 * Math.max(1, pot) ? 0 : Math.exp((o.ev - best) / scale));
+    // Under the one-pair guard the choice is firm (little mixing): no "sometimes call" there.
+    const scale = Math.max(1, pot) * CONFIG.tuning.postflopTemperature * (guard ? 0.25 : 1);
+    // v1.15.7 (real game: an all-in call scored -96 vs fold 0 was picked by the mixing, and busted us):
+    // no mixing into big commitments (40%+ of the stack). Those are only played when they're the best.
+    const bigCommit = (o: Option) => o.x !== undefined && o.x >= 0.4 * myStack;
+    // Nor into calls that lose chips vs folding (real games: calls at -9 / -17 / -20 / -96 were picked).
+    const losingCall = (o: Option) => o.action.type === "call" && o.ev < 0;
+    const probs = options.map(o => o.ev < best - 0.08 * Math.max(1, pot) || (bigCommit(o) && o.ev < best) || losingCall(o) ? 0
+        : Math.exp((o.ev - best) / scale));
     let x = Math.random() * probs.reduce((a, b) => a + b, 0), choice = 0;
     while (x > probs[choice] && choice < probs.length - 1) x -= probs[choice++];
 
@@ -262,6 +423,7 @@ export function postflopDecide(view: TableView, state: State, ctx: PostflopConte
         ? `${opps[0].name}'s range: ${Math.round(draws.flush * 100)}% flush draws, ${Math.round(draws.straight * 100)}% straight draws. `
         : "";
     const reason = `${street}, equity vs their ranges ${Math.round(eqAll * 100)}%, pot ${pot}, ${ip ? "in" : "out of"} position. ` +
+        ruleNote + (weakMultiway ? `Weak (${Math.round(eqAll * 100)}%) into ${opps.length} players: no bet or raise. ` : "") +
         exploitNote + drawNote + options.map(o => `${o.label}: ${o.ev >= 0 ? "+" : ""}${o.ev.toFixed(0)}`).join(" | ") +
         ` -> ${options[choice].label.split(" [")[0]}`;
     return { action: options[choice].action, reason };

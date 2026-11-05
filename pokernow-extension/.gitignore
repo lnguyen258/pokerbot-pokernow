@@ -4,3 +4,5 @@ node_modules/
 tools/.build/
 tools/.build-test/
 tools/.build-sim/
+tools/.build-smoke/
+tools/reviews/

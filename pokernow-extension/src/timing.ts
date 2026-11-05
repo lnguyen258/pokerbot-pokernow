@@ -26,10 +26,6 @@ const chance = (p: number) => Math.random() < p;
 
 export function thinkTime(action: Action, state: State): { ms: number, why: string } {
     if (!CONFIG.timing.enabled) return { ms: 300, why: "timing off" };
-    // Preflop: same short think for every action (fold, call, raise, all-in), so it's quick
-    // and the timing still says nothing. The acting-out below is for after the flop.
-    if (!state.board?.length)
-        return { ms: fitToBudget(between(SHORTEST, PREFLOP_LONGEST)) * 1000, why: "preflop: quick, same for every action" };
     const strong = strength >= 0.75, weak = strength < 0.4;
     const bigPot = state.toCall >= 0.3 * state.stack || action.raiseAmount === "all_in";
     let s: number, why: string;
@@ -66,8 +62,6 @@ export function thinkTime(action: Action, state: State): { ms: number, why: stri
 /** The shortest and longest thinks above (quick fold; 10 s tank + 3 s big pot). */
 const SHORTEST = 0.8;
 const LONGEST = 13;
-/** Preflop thinks go up to this (raw seconds): about 2.0-2.7 s with the 2-5 s budget. */
-const PREFLOP_LONGEST = 3.5;
 
 /**
  * Squeezes the think time into [minSeconds, maxSeconds]. Scaled, not clipped:
